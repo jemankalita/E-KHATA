@@ -1,23 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Source Serif 4", ui-serif, Georgia, serif;
-  --color-ink-950: #f3f1ea;
-  --color-ink-900: #faf9f5;
-  --color-ink-800: #ffffff;
-  --color-ink-700: #ecebe3;
-  --color-paper-50: #171714;
-  --color-paper-100: #2a2a26;
-  --color-paper-200: #3f3f39;
-  --color-paper-300: #52524a;
-  --color-paper-400: #5f5f56;
-  --color-gold-400: #7a5f24;
-  --color-gold-500: #634d1d;
-  --color-teal-300: #0d7d74;
-  --color-teal-400: #0b6a63;
-  --color-teal-500: #084f4a;
-  --color-clay-400: #9a4a32;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Serif Display", ui-serif, Georgia, serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  --color-obsidian: #0f1011;
+  --color-abyss: #090a0b;
+  --color-graphite: #2e2e2e;
+  --color-steel: #3f4041;
+  --color-silver: #cacaca;
+  --color-fog: #6a6b6b;
+  --color-ash: #9f9fa0;
+  --color-cloud: #f5f5f7;
+  --color-pure: #ffffff;
+  --color-void: #000000;
+  --color-iris-gleam: #847dff;
+  --color-pale-iris: #d1c9ff;
+  --color-deep-iris: #4b49aa;
+  --color-orchid-bloom: #dd90d8;
+  --color-periwinkle: #90b8f0;
+  --color-cyan-signal: #00b3dd;
+
+  --color-ink-950: #0f1011;
+  --color-ink-900: #090a0b;
+  --color-ink-800: #2e2e2e;
+  --color-ink-700: #3f4041;
+  --color-paper-50: #f5f5f7;
+  --color-paper-100: #f5f5f7;
+  --color-paper-200: #cacaca;
+  --color-paper-300: #9f9fa0;
+  --color-paper-400: #9f9fa0;
+  --color-gold-400: #d1c9ff;
+  --color-gold-500: #847dff;
+  --color-teal-300: #847dff;
+  --color-teal-400: #847dff;
+  --color-teal-500: #d1c9ff;
+  --color-clay-400: #dd90d8;
 }
 
 html {
@@ -28,9 +47,10 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f3f1ea;
-  color: var(--color-paper-50);
+  background: #0f1011;
+  color: #f5f5f7;
   font-family: var(--font-sans);
+  font-weight: 400;
 }
 
 #root {
@@ -48,18 +68,18 @@ body {
 }
 
 img {
-  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline: 1px solid rgba(255, 255, 255, 0.08);
   outline-offset: -1px;
 }
 
 ::selection {
-  background: rgba(13, 125, 116, 0.22);
+  background: rgba(132, 125, 255, 0.28);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-teal-400);
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .sr-only {
@@ -80,85 +100,35 @@ img {
   top: 0;
   z-index: 100;
   transform: translate(-50%, -120%);
-  background: var(--color-ink-800);
-  color: var(--color-paper-50);
+  background: #ffffff;
+  color: #000000;
   padding: 0.6rem 1rem;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 10px 30px -18px rgba(28, 28, 25, 0.6);
-  transition-property: transform;
-  transition-duration: 180ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 0 0 8px 8px;
 }
 
 .skip-link:focus-visible {
   transform: translate(-50%, 0);
 }
 
-/* Drifting gradient mesh for the landing backdrop. Transform/opacity only. */
-@keyframes ekhata-drift-a {
-  0% {
-    transform: translate3d(-4%, -2%, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(6%, 5%, 0) scale(1.12);
-  }
-  100% {
-    transform: translate3d(-4%, -2%, 0) scale(1);
-  }
+.field {
+  min-height: 2.75rem;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000000;
+  padding: 0.5rem 1.25rem;
+  color: #fafafa;
 }
 
-@keyframes ekhata-drift-b {
-  0% {
-    transform: translate3d(3%, 4%, 0) scale(1.08);
-  }
-  50% {
-    transform: translate3d(-6%, -4%, 0) scale(0.94);
-  }
-  100% {
-    transform: translate3d(3%, 4%, 0) scale(1.08);
-  }
+.field:focus {
+  border-color: #ffffff;
+  outline: none;
 }
 
-@keyframes ekhata-drift-c {
-  0% {
-    transform: translate3d(0, 3%, 0) scale(0.96);
-  }
-  50% {
-    transform: translate3d(-5%, -6%, 0) scale(1.16);
-  }
-  100% {
-    transform: translate3d(0, 3%, 0) scale(0.96);
-  }
-}
-
-@keyframes ekhata-grid-pan {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-48px, -48px, 0);
-  }
-}
-
-.ekhata-blob {
-  will-change: transform;
-}
-
-.ekhata-blob-a {
-  animation: ekhata-drift-a 26s ease-in-out infinite;
-}
-
-.ekhata-blob-b {
-  animation: ekhata-drift-b 34s ease-in-out infinite;
-}
-
-.ekhata-blob-c {
-  animation: ekhata-drift-c 42s ease-in-out infinite;
-}
-
-.ekhata-grid-pan {
-  animation: ekhata-grid-pan 24s linear infinite;
-  will-change: transform;
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #2e2e2e;
 }
 
 @keyframes ekhata-shimmer {
@@ -170,29 +140,15 @@ img {
   }
 }
 
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: rgba(28, 28, 25, 0.06);
-}
-
 .skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
   animation: ekhata-shimmer 1.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .motion-reduce-transform {
-    transform: none !important;
-  }
-
-  .ekhata-blob-a,
-  .ekhata-blob-b,
-  .ekhata-blob-c,
-  .ekhata-grid-pan,
   .skeleton::after {
     animation: none !important;
   }

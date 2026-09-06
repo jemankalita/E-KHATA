@@ -29,10 +29,10 @@ export function LedgerPage() {
       {rows.length === 0 ? (
         <EmptyState
           title={`No entries for ${selectedCustomer.name}`}
-          body="Every confirmed QR lands here, newest first. Switch customer above or add the first bill."
+          body="Every posted bill lands here, newest first. Switch account above or add the first bill."
           action={
             <Link to="/shop/quick-qr">
-              <PrimaryButton>Raise a Quick QR</PrimaryButton>
+              <PrimaryButton>Post to account</PrimaryButton>
             </Link>
           }
         />

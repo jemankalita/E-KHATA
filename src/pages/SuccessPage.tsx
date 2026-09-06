@@ -45,7 +45,7 @@ export function SuccessPage() {
       <div className="mx-auto max-w-md py-16">
         <EmptyState
           title="No confirmation yet"
-          body="Nothing has been added to the khata in this session. Raise a QR and let the customer confirm it."
+          body="Nothing has been added to the khata in this session. Post a bill to an account from the counter."
           action={
             <Link to="/shop">
               <PrimaryButton>Back to dashboard</PrimaryButton>
@@ -64,14 +64,14 @@ export function SuccessPage() {
           initial={{ scale: reduce ? 1 : 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={springs.bouncy}
-          className="relative grid h-20 w-20 place-items-center rounded-full bg-teal-400 text-white shadow-[0_18px_40px_-20px_rgba(11,106,99,0.8)]"
+          className="relative grid h-20 w-20 place-items-center rounded-full bg-pure text-void"
         >
           <Check size={36} aria-hidden="true" />
         </motion.div>
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-400">Scan complete</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ash">Posted to account</p>
         <h2 className="font-display mt-2 text-3xl sm:text-4xl">Added to E-Khata</h2>
       </div>
 

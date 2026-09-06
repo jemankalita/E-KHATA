@@ -1,21 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CustomerSelect } from '../components/CustomerSelect'
 import { QrPanel } from '../components/QrPanel'
 import { EmptyState } from '../components/ui/EmptyState'
 import { PrimaryButton } from '../components/ui/PrimaryButton'
 import { MERCHANT_NAME } from '../data/seed'
 import { createReferenceId } from '../lib/format'
-import { buildPayUrl } from '../lib/payLink'
-import { playConfirmation } from '../lib/voice'
 import { useKhata } from '../store/KhataStore'
 
 export function QrPage() {
   const navigate = useNavigate()
-  const { billDraft, selectedCustomer, confirmScan, registerIntent, lastTransaction, waitingRef } = useKhata()
+  const { billDraft, selectedCustomer, confirmScan, registerIntent } = useKhata()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const referenceId = useMemo(() => createReferenceId(), [])
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
 
   const registered = useRef<string | null>(null)
   useEffect(() => {
@@ -32,18 +30,12 @@ export function QrPage() {
     })
   }, [billDraft, referenceId, registerIntent, selectedCustomer.id])
 
-  useEffect(() => {
-    if (lastTransaction?.referenceId !== referenceId) return
-    if (!lastTransaction.voicePlayed) void playConfirmation(lastTransaction.amount, false)
-    navigate('/shop/success')
-  }, [lastTransaction, navigate, referenceId])
-
   if (!billDraft) {
     return (
       <div className="mx-auto max-w-xl py-16">
         <EmptyState
           title="No bill confirmed yet"
-          body="Generate the QR from a scanned bill so the amount and items are attached to it."
+          body="Upload and match a bill first, then raise a counter QR and post it to an account."
           action={<PrimaryButton onClick={() => navigate('/shop/upload')}>Upload bill</PrimaryButton>}
         />
       </div>
@@ -51,23 +43,16 @@ export function QrPage() {
   }
 
   const merchantName = billDraft.merchantName || MERCHANT_NAME
-  const payload = buildPayUrl({
-    origin,
-    referenceId,
-    customerId: selectedCustomer.id,
-    amount: billDraft.totalAmount,
-    merchantName,
-    paymentMode: 'ocr-qr',
-  })
+  const payload = `ekhata:${selectedCustomer.id}:${referenceId}:${billDraft.totalAmount}`
 
-  async function onScan() {
+  async function postToAccount() {
     setBusy(true)
     setError(null)
     try {
       await confirmScan(referenceId)
       navigate('/shop/success')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add this bill to the khata.')
+      setError(err instanceof Error ? err.message : 'Could not add this bill to the account.')
     } finally {
       setBusy(false)
     }
@@ -75,12 +60,16 @@ export function QrPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
-      <div className="text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-400">Bill QR</p>
-        <h2 className="font-display mt-1 text-3xl sm:text-4xl">Customer scan</h2>
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ash">Bill QR</p>
+        <h2 className="font-display mt-1 text-[38px] font-normal leading-none">Counter QR</h2>
+        <p className="mt-3 text-pretty text-sm text-ash">
+          The matched bill becomes a shopkeeper QR. Post it to the account — customers cannot read it.
+        </p>
       </div>
+      <CustomerSelect />
       {error ? (
-        <p role="alert" className="rounded-2xl bg-clay-400/10 px-4 py-3 text-center text-sm text-clay-400">
+        <p role="alert" className="rounded-[8px] bg-orchid-bloom/15 px-4 py-3 text-sm text-orchid-bloom">
           {error}
         </p>
       ) : null}
@@ -91,8 +80,7 @@ export function QrPage() {
         referenceId={referenceId}
         payload={payload}
         busy={busy}
-        waiting={waitingRef === referenceId}
-        onSimulateScan={() => void onScan()}
+        onPost={() => void postToAccount()}
       />
     </div>
   )

@@ -10,7 +10,7 @@ export interface ShopLink {
 export const SHOP_LINKS: ShopLink[] = [
   { to: '/shop', label: 'Dashboard', short: 'Khata', icon: LayoutDashboard },
   { to: '/shop/upload', label: 'Upload Bill', short: 'Upload', icon: Upload },
-  { to: '/shop/quick-qr', label: 'Quick QR', short: 'Quick QR', icon: QrCode },
+  { to: '/shop/quick-qr', label: 'Quick QR', short: 'QR', icon: QrCode },
   { to: '/shop/ledger', label: 'Ledger', short: 'Ledger', icon: BookOpen },
-  { to: '/shop/settlement', label: 'Settlement', short: 'Settle', icon: Scale },
+  { to: '/shop/settlement', label: 'Settlement', short: 'Auto', icon: Scale },
 ]

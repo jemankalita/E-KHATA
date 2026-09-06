@@ -1,6 +1,6 @@
 import type { KhataSnapshot } from './payLink'
 import type { Customer, Item, PaymentMode, Transaction } from '../types'
-import { addToKhata, settleCustomer } from './khata'
+import { addToKhata, autoSettleDue, settleCustomer } from './khata'
 import { CUSTOMERS, TRANSACTIONS } from '../data/seed'
 
 const KEY = 'ekhata-state-v1'
@@ -32,10 +32,14 @@ export async function fetchSnapshot(): Promise<KhataSnapshot> {
     const response = await fetch('/api/state')
     if (!response.ok) throw new Error('state unavailable')
     const data = (await response.json()) as KhataSnapshot
-    writeLocalSnapshot(data)
-    return data
+    const settled = autoSettleDue(data.customers, data.transactions)
+    const snapshot = { customers: settled.customers, transactions: settled.transactions }
+    writeLocalSnapshot(snapshot)
+    return snapshot
   } catch {
-    return readLocalSnapshot()
+    const local = readLocalSnapshot()
+    const settled = autoSettleDue(local.customers, local.transactions)
+    return { customers: settled.customers, transactions: settled.transactions }
   }
 }
 

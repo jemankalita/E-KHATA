@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BURST_LIMITS, burstParticles } from './burst'
+import { BURST_LIMITS, burstParticles, moneyNotes, NOTE_LIMITS } from './burst'
 
 describe('burstParticles', () => {
   it('returns the requested number of particles', () => {
@@ -37,10 +37,22 @@ describe('burstParticles', () => {
     expect(Math.max(...angles) - Math.min(...angles)).toBeGreaterThan(180)
   })
 
-  it('mixes coins and sparks', () => {
+  it('mixes coins, sparks, and notes', () => {
     const kinds = new Set(burstParticles(16, 5).map((particle) => particle.kind))
     expect(kinds.has('coin')).toBe(true)
     expect(kinds.has('spark')).toBe(true)
+    expect(kinds.has('note')).toBe(true)
+  })
+
+  it('launches money notes upward in a rocket spread', () => {
+    const notes = moneyNotes(10, 8)
+    expect(notes).toHaveLength(10)
+    expect(moneyNotes(10, 8)).toEqual(notes)
+    for (const note of notes) {
+      expect(note.x).toBeGreaterThanOrEqual(NOTE_LIMITS.minX)
+      expect(note.x).toBeLessThanOrEqual(NOTE_LIMITS.maxX)
+      expect(note.duration).toBeGreaterThanOrEqual(NOTE_LIMITS.minDuration)
+    }
   })
 
   it('gives every particle a unique id', () => {

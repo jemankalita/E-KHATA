@@ -13,7 +13,7 @@ import { useKhata } from '../store/KhataStore'
 const actions = [
   { to: '/shop/upload', label: 'Upload Bill', icon: Upload, variant: 'primary' as const },
   { to: '/shop/quick-qr', label: 'Quick QR', icon: QrCode, variant: 'secondary' as const },
-  { to: '/shop/settlement', label: 'Settle E-Khata', icon: Scale, variant: 'secondary' as const },
+  { to: '/shop/settlement', label: 'Auto settlement', icon: Scale, variant: 'secondary' as const },
 ]
 
 export function DashboardPage() {

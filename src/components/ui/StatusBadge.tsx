@@ -2,12 +2,12 @@ import { type HTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
 const tones = {
-  verified: 'bg-teal-400/12 text-teal-500 border-teal-400/30',
-  pending: 'bg-amber-500/12 text-amber-800 border-amber-700/30',
-  settled: 'bg-sky-600/10 text-sky-900 border-sky-700/25',
-  matched: 'bg-teal-400/12 text-teal-500 border-teal-400/30',
-  uncertain: 'bg-amber-500/12 text-amber-800 border-amber-700/30',
-  unmatched: 'bg-rose-600/10 text-rose-800 border-rose-700/25',
+  verified: 'bg-white/12 text-cloud border-white/15',
+  pending: 'bg-white/8 text-ash border-white/12',
+  settled: 'bg-white/8 text-ash border-white/12',
+  matched: 'bg-white/12 text-cloud border-white/15',
+  uncertain: 'bg-white/8 text-ash border-white/12',
+  unmatched: 'bg-orchid-bloom/15 text-orchid-bloom border-orchid-bloom/25',
 }
 
 export function StatusBadge({
@@ -18,7 +18,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em]',
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.16em]',
         tones[tone],
         className,
       )}

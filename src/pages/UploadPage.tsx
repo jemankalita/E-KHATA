@@ -64,7 +64,7 @@ export function UploadPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-400">Capture</p>
         <h2 className="font-display mt-1 text-3xl sm:text-4xl">Upload bill</h2>
         <p className="mt-2 text-pretty text-sm text-paper-400">
-          Photo → OCR → catalog match → QR. Without a readable photo the demo falls back to a sample kirana bill.
+          Photo → OCR → catalog match → post to account. Without a readable photo the demo falls back to a sample kirana bill.
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export function UploadPage() {
                 Review items
               </PrimaryButton>
               <PrimaryButton variant="secondary" className="w-full" onClick={() => navigate('/shop/qr')}>
-                Continue to QR
+                Continue to account
               </PrimaryButton>
             </div>
           </Card>

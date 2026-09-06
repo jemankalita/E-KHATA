@@ -23,10 +23,9 @@ export function BalanceCard() {
         <div>
           <dt className="text-paper-400">Selected customer</dt>
           <dd className="mt-1 font-medium text-paper-50">{selectedCustomer.name}</dd>
-          <dd className="tabular text-paper-400">{selectedCustomer.phone}</dd>
         </div>
         <div>
-          <dt className="text-paper-400">Next settlement</dt>
+          <dt className="text-paper-400">Next automatic settlement</dt>
           <dd className="mt-1 font-medium text-paper-50">{formatDate(selectedCustomer.nextSettlementDate)}</dd>
           <dt className="mt-3 text-paper-400">Customer khata</dt>
           <dd>

@@ -1,4 +1,27 @@
-export type BurstKind = 'coin' | 'spark'
+export type BurstKind = 'coin' | 'spark' | 'note'
+
+export interface MoneyNote {
+  id: string
+  x: number
+  drift: number
+  rotate: number
+  delay: number
+  duration: number
+  denom: 10 | 20 | 50 | 100 | 500
+}
+
+export const NOTE_LIMITS = {
+  minX: -72,
+  maxX: 72,
+  minDrift: -28,
+  maxDrift: 28,
+  maxRotate: 28,
+  maxDelay: 0.28,
+  minDuration: 1.1,
+  maxDuration: 1.8,
+} as const
+
+const DENOMS = [10, 20, 50, 100, 500] as const
 
 export interface BurstParticle {
   id: string
@@ -50,7 +73,21 @@ export function burstParticles(count: number, seed: number): BurstParticle[] {
       scale: lerp(BURST_LIMITS.minScale, BURST_LIMITS.maxScale, random()),
       delay: random() * BURST_LIMITS.maxDelay,
       spin: (random() - 0.5) * 2 * BURST_LIMITS.maxSpin,
-      kind: index % 3 === 0 ? 'coin' : 'spark',
+      kind: index % 3 === 0 ? 'note' : index % 2 === 0 ? 'coin' : 'spark',
     }
   })
+}
+
+export function moneyNotes(count: number, seed: number): MoneyNote[] {
+  if (!Number.isFinite(count) || count <= 0) return []
+  const random = createRandom(seed + 17)
+  return Array.from({ length: count }, (_, index) => ({
+    id: `note-${seed}-${index}`,
+    x: lerp(NOTE_LIMITS.minX, NOTE_LIMITS.maxX, random()),
+    drift: lerp(NOTE_LIMITS.minDrift, NOTE_LIMITS.maxDrift, random()),
+    rotate: (random() - 0.5) * 2 * NOTE_LIMITS.maxRotate,
+    delay: random() * NOTE_LIMITS.maxDelay,
+    duration: lerp(NOTE_LIMITS.minDuration, NOTE_LIMITS.maxDuration, random()),
+    denom: DENOMS[index % DENOMS.length]!,
+  }))
 }

@@ -53,8 +53,8 @@ export function MatchPage() {
       {draft.extractedItems.length === 0 ? (
         <EmptyState
           title="No line items were read"
-          body="The photo produced no usable rows. You can still raise a QR for the bill total."
-          action={<PrimaryButton onClick={() => navigate('/shop/qr')}>Continue to QR</PrimaryButton>}
+          body="The photo produced no usable rows. You can still post the bill total to an account."
+          action={<PrimaryButton onClick={() => navigate('/shop/qr')}>Continue to account</PrimaryButton>}
         />
       ) : (
         <motion.ul variants={staggerContainer()} initial="hidden" animate="visible" className="space-y-3">
@@ -108,7 +108,7 @@ export function MatchPage() {
 
       <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
         <p className="tabular text-lg">Bill total {formatRupee(draft.totalAmount)}</p>
-        <PrimaryButton onClick={() => navigate('/shop/qr')}>Confirm and generate QR</PrimaryButton>
+        <PrimaryButton onClick={() => navigate('/shop/qr')}>Confirm and post to account</PrimaryButton>
       </Card>
     </div>
   )

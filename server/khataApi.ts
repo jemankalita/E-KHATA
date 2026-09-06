@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
-import { addToKhata, settleCustomer } from '../src/lib/khata.ts'
+import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
 import type { KhataSnapshot, PayIntent } from '../src/lib/payLink.ts'
 import type { Item, PaymentMode } from '../src/types.ts'
 
@@ -73,6 +73,14 @@ function snapshot(): KhataSnapshot {
   return { customers: state.customers, transactions: state.transactions }
 }
 
+function applyDueSettlements() {
+  const result = autoSettleDue(state.customers, state.transactions)
+  if (result.settledCustomerIds.length === 0) return
+  state = { ...state, customers: result.customers, transactions: result.transactions }
+  persist()
+  broadcast({ type: 'settled', settledAmount: result.settledAmount, ...snapshot() })
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = new URL(req.url ?? '/', 'http://localhost')
   if (!url.pathname.startsWith('/api/')) {
@@ -90,6 +98,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
   }
 
   if (req.method === 'GET' && url.pathname === '/api/state') {
+    applyDueSettlements()
     json(res, 200, snapshot())
     return
   }
@@ -156,7 +165,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
     }
     const customer = state.customers.find((entry) => entry.id === intent.customerId)
     if (!customer) {
-      json(res, 400, { error: 'Customer not found. Use phone or ID, not a typed name.' })
+      json(res, 400, { error: 'Customer account not found. Select an account first.' })
       return
     }
     const result = addToKhata(state.customers, state.transactions, {
@@ -178,6 +187,43 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
     const payload = { type: 'committed', transaction: result.transaction, ...snapshot() }
     broadcast(payload)
     json(res, 200, payload)
+    return
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/voice') {
+    const body = await readBody(req)
+    const text = String(body.text ?? '').trim()
+    const key = process.env.ELEVENLABS_API_KEY || process.env.VITE_ELEVENLABS_API_KEY
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || process.env.VITE_ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb'
+    if (!text) {
+      json(res, 400, { error: 'Voice text is required.' })
+      return
+    }
+    if (!key) {
+      json(res, 503, { error: 'ElevenLabs is not configured.' })
+      return
+    }
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': key,
+        'Content-Type': 'application/json',
+        Accept: 'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+      }),
+    })
+    if (!response.ok) {
+      json(res, 502, { error: 'ElevenLabs could not speak this line.' })
+      return
+    }
+    const audio = Buffer.from(await response.arrayBuffer())
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.end(audio)
     return
   }
 

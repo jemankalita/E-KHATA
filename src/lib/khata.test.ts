@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CUSTOMERS, TRANSACTIONS } from '../data/seed'
-import { addToKhata, settleCustomer } from './khata'
+import { addToKhata, autoSettleDue, settleCustomer } from './khata'
 
 describe('khata', () => {
   it('rejects transactions without a known customer id', () => {
@@ -12,7 +12,42 @@ describe('khata', () => {
         items: [],
         paymentMode: 'quick-qr',
       }),
-    ).toThrow(/Customer not found/)
+    ).toThrow(/Customer account not found/)
+  })
+
+  it('posts to an account without requiring a phone number', () => {
+    const customer = { ...CUSTOMERS[0]!, phone: '' }
+    const result = addToKhata(
+      CUSTOMERS.map((entry) => (entry.id === customer.id ? customer : entry)),
+      TRANSACTIONS,
+      {
+        customer,
+        merchantName: 'Kalita Kirana',
+        amount: 40,
+        items: [],
+        paymentMode: 'quick-qr',
+      },
+    )
+    expect(result.transaction.customerId).toBe(customer.id)
+    expect(result.customers.find((entry) => entry.id === customer.id)?.currentBalance).toBe(
+      customer.currentBalance + 40,
+    )
+  })
+
+  it('auto-settles accounts whose due date has passed', () => {
+    const customers = [{ ...CUSTOMERS[0]!, nextSettlementDate: '2026-08-01T00:00:00.000Z' }]
+    const result = autoSettleDue(customers, TRANSACTIONS, new Date('2026-09-06T12:00:00.000Z'))
+    expect(result.settledCustomerIds).toEqual(['cust-aarav'])
+    expect(result.customers[0]?.currentBalance).toBe(0)
+    expect(result.transactions.every((tx) => tx.customerId !== 'cust-aarav' || tx.settlementState === 'settled')).toBe(
+      true,
+    )
+  })
+
+  it('leaves accounts that are not yet due', () => {
+    const result = autoSettleDue(CUSTOMERS, TRANSACTIONS, new Date('2026-09-06T12:00:00.000Z'))
+    expect(result.settledCustomerIds).toEqual([])
+    expect(result.customers[0]?.currentBalance).toBe(CUSTOMERS[0]!.currentBalance)
   })
 
   it('adds amount to the selected customer balance and prepends a verified ledger row', () => {

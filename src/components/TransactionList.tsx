@@ -16,10 +16,10 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
       <EmptyState
         className="mt-4"
         title="Nothing on the khata yet"
-        body="Photograph a bill or raise a Quick QR — the first entry lands here the moment the customer confirms."
+        body="Photograph a bill or post an amount — the first entry lands here on the selected account."
         action={
           <Link to="/shop/quick-qr">
-            <PrimaryButton>Raise a Quick QR</PrimaryButton>
+            <PrimaryButton>Post to account</PrimaryButton>
           </Link>
         }
       />

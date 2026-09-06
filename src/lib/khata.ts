@@ -17,10 +17,10 @@ export function addToKhata(
 ): { customers: Customer[]; transactions: Transaction[]; transaction: Transaction } {
   const customer = customers.find((entry) => entry.id === input.customer.id)
   if (!customer) {
-    throw new Error('Customer not found. Select a customer by phone or ID.')
+    throw new Error('Customer account not found. Select an account first.')
   }
-  if (!input.customer.id || !input.customer.phone) {
-    throw new Error('Transactions must be linked to customerId or verified phone.')
+  if (!input.customer.id) {
+    throw new Error('Transactions must be linked to a customer account.')
   }
   if (input.amount <= 0) {
     throw new Error('Amount must be greater than zero.')
@@ -81,6 +81,39 @@ export function settleCustomer(
   )
 
   return { customers: nextCustomers, transactions: nextTransactions, settledAmount }
+}
+
+export function autoSettleDue(
+  customers: Customer[],
+  transactions: Transaction[],
+  now: Date = new Date(),
+): {
+  customers: Customer[]
+  transactions: Transaction[]
+  settledCustomerIds: string[]
+  settledAmount: number
+} {
+  const dueIds = customers
+    .filter((customer) => new Date(customer.nextSettlementDate).getTime() <= now.getTime())
+    .map((customer) => customer.id)
+
+  return dueIds.reduce(
+    (state, customerId) => {
+      const next = settleCustomer(state.customers, state.transactions, customerId)
+      return {
+        customers: next.customers,
+        transactions: next.transactions,
+        settledCustomerIds: [...state.settledCustomerIds, customerId],
+        settledAmount: state.settledAmount + next.settledAmount,
+      }
+    },
+    {
+      customers,
+      transactions,
+      settledCustomerIds: [] as string[],
+      settledAmount: 0,
+    },
+  )
 }
 
 function nextMonthIso(): string {

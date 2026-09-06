@@ -40,23 +40,11 @@ async function playLocalAudio(): Promise<boolean> {
 }
 
 async function playElevenLabs(text: string): Promise<boolean> {
-  const key = import.meta.env.VITE_ELEVENLABS_API_KEY
-  const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID ?? 'JBFqnCBsd6RMkjVDRZzb'
-  if (!key) return false
-
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const response = await fetch('/api/voice', {
       method: 'POST',
-      headers: {
-        'xi-api-key': key,
-        'Content-Type': 'application/json',
-        Accept: 'audio/mpeg',
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
     })
     if (!response.ok) return false
     const blob = await response.blob()
@@ -77,7 +65,10 @@ function playSpeechSynthesis(text: string): boolean {
   return true
 }
 
-export async function playConfirmation(amount: number, muted: boolean): Promise<'local' | 'elevenlabs' | 'speech' | 'muted'> {
+export async function playConfirmation(
+  amount: number,
+  muted: boolean,
+): Promise<'local' | 'elevenlabs' | 'speech' | 'muted'> {
   if (muted) return 'muted'
   const text = confirmationLine(amount)
   const elevenOk = await playElevenLabs(text)

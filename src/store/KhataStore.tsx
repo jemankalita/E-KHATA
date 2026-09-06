@@ -3,6 +3,7 @@ import { PRODUCT_CATALOG } from '../data/catalog'
 import { CUSTOMERS, MERCHANT_NAME, TRANSACTIONS } from '../data/seed'
 import { matchItems, overallConfidence } from '../lib/matching'
 import { recognizeBill } from '../lib/ocr'
+import { autoSettleDue } from '../lib/khata'
 import { confirmIntent, confirmIntentLocal, createIntent, fetchSnapshot, settleLocal, settleRemote } from '../lib/persist'
 import { playConfirmation } from '../lib/voice'
 import type { BillDraft, Customer, Item, PaymentMode, QuickQRDraft, Transaction } from '../types'
@@ -66,8 +67,10 @@ const initialState: AppState = {
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'hydrate':
-      return { ...state, customers: action.customers, transactions: action.transactions }
+    case 'hydrate': {
+      const settled = autoSettleDue(action.customers, action.transactions)
+      return { ...state, customers: settled.customers, transactions: settled.transactions }
+    }
     case 'select-customer':
       return { ...state, selectedCustomerId: action.customerId }
     case 'set-bill':
