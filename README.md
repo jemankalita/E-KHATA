@@ -130,9 +130,7 @@ npm run build
 
 ---
 
-## Note for evaluators
 
-This is a **hackathon prototype**. The optional Supabase migration uses permissive demo RLS — do not store real customer data. Production would require auth, device pairing, and stricter policies before Realtime and outbound ElevenLabs calls go live.
 
 ---
 
