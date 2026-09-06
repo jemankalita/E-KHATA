@@ -6,23 +6,31 @@ import { TermsLink } from '@/components/TermsLink'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
+import { useTheme } from '@/hooks/useTheme'
 import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export function LoginPage() {
   const { setRole, resetDemo } = useKhata()
+  const { theme } = useTheme()
   const navigate = useNavigate()
   const activeSection = useActiveLoginSection()
+  const light = theme === 'light'
 
   return (
     <div className="relative min-h-svh bg-transparent text-white">
       <AtmosphericBackdrop />
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/20 backdrop-blur-md">
+      <header
+        className={`sticky top-0 z-20 border-b backdrop-blur-md ${
+          light ? 'border-black/5 bg-white/95 text-zinc-900' : 'border-white/10 bg-black/20 text-white'
+        }`}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <BrandWordmark className="text-white" />
+          <BrandWordmark className={light ? 'text-zinc-900' : 'text-white'} />
           <LoginSectionNav
             active={activeSection}
+            tone={light ? 'bar' : 'sky'}
             className="hidden items-center gap-6 md:flex"
           />
           <div className="flex items-center gap-3">
@@ -30,7 +38,9 @@ export function LoginPage() {
             <button
               type="button"
               onClick={resetDemo}
-              className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white"
+              className={`inline-flex items-center gap-2 text-[13px] ${
+                light ? 'text-zinc-500 hover:text-zinc-900' : 'text-white/70 hover:text-white'
+              }`}
             >
               <RotateCcw className="size-3.5" /> Reset demo
             </button>
@@ -38,21 +48,22 @@ export function LoginPage() {
         </div>
         <LoginSectionNav
           active={activeSection}
+          tone={light ? 'bar' : 'sky'}
           className="flex gap-5 overflow-x-auto px-6 pb-3 md:hidden"
         />
       </header>
 
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:py-20">
         <div>
-          <p className="inline-flex items-center gap-2 text-[13px] text-white/80">
+          <p className="inline-flex items-center gap-2 text-[13px] text-white [text-shadow:0_2px_14px_rgba(0,40,90,0.45)]">
             <Sparkles className="size-3.5" /> 1 · Choose how you enter
           </p>
-          <h1 className="mt-6 font-display text-5xl leading-[0.95] text-white md:text-7xl">
+          <h1 className="mt-6 font-display text-5xl leading-[0.95] text-white [text-shadow:0_8px_32px_rgba(0,40,90,0.5)] md:text-7xl">
             Trust captured
-            <span className="mt-2 block italic text-[#d8c8ff]">in a snap.</span>
+            <span className="mt-2 block italic text-white">in a snap.</span>
           </h1>
-          <p className="mt-5 font-display text-3xl text-white">e-Khata</p>
-          <p className="mt-4 max-w-lg text-[16px] leading-relaxed text-white/75">
+          <p className="mt-5 font-display text-3xl text-white [text-shadow:0_4px_20px_rgba(0,40,90,0.45)]">e-Khata</p>
+          <p className="mt-4 max-w-lg text-[16px] leading-relaxed text-white [text-shadow:0_2px_16px_rgba(0,40,90,0.45)]">
             Traditional store credit, written as a shared digital khata. Merchant, customer, one record. The
             shopkeeper posts each bill to an account.
           </p>

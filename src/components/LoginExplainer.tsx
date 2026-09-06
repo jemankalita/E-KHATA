@@ -75,23 +75,34 @@ export function useActiveLoginSection() {
 export function LoginSectionNav({
   active,
   className = '',
+  tone = 'sky',
 }: {
   active: (typeof LOGIN_SECTIONS)[number]['id']
   className?: string
+  tone?: 'sky' | 'bar'
 }) {
   return (
     <nav aria-label="On this page" className={className}>
-      {LOGIN_SECTIONS.map((section) => (
-        <a
-          key={section.id}
-          href={`#${section.id}`}
-          className={`whitespace-nowrap text-[12px] uppercase tracking-[0.16em] transition-colors ${
-            active === section.id ? 'text-white' : 'text-white/55 hover:text-white'
-          }`}
-        >
-          {section.label}
-        </a>
-      ))}
+      {LOGIN_SECTIONS.map((section) => {
+        const on = active === section.id
+        const color =
+          tone === 'bar'
+            ? on
+              ? 'text-zinc-900'
+              : 'text-zinc-500 hover:text-zinc-900'
+            : on
+              ? 'text-white'
+              : 'text-white/60 hover:text-white'
+        return (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className={`whitespace-nowrap text-[12px] uppercase tracking-[0.16em] transition-colors ${color}`}
+          >
+            {section.label}
+          </a>
+        )
+      })}
     </nav>
   )
 }
@@ -101,9 +112,15 @@ export function LoginExplainer() {
     <div className="mx-auto max-w-6xl space-y-24 px-6 pb-28 pt-8">
       {stories.map((story) => (
         <section key={story.id} id={story.id} className="scroll-mt-28">
-          <p className="text-[12px] uppercase tracking-[0.18em] text-white/55">{story.kicker}</p>
-          <h2 className="mt-4 max-w-3xl font-display text-4xl leading-[0.95] text-white md:text-6xl">{story.title}</h2>
-          <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-white/75">{story.body}</p>
+          <p className="text-[12px] uppercase tracking-[0.18em] text-white/80 [text-shadow:0_1px_12px_rgba(0,40,90,0.35)]">
+            {story.kicker}
+          </p>
+          <h2 className="mt-4 max-w-3xl font-display text-4xl leading-[0.95] text-white [text-shadow:0_6px_28px_rgba(0,40,90,0.45)] md:text-6xl">
+            {story.title}
+          </h2>
+          <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-white [text-shadow:0_2px_16px_rgba(0,40,90,0.4)]">
+            {story.body}
+          </p>
           <ul className="mt-10 grid gap-3 md:grid-cols-3">
             {story.points.map((point) => (
               <li

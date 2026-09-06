@@ -30,13 +30,6 @@ type Comet = {
   sparks: Spark[]
 }
 
-type Cloud = {
-  x: number
-  y: number
-  speed: number
-  sprite: HTMLCanvasElement
-}
-
 type Nebula = {
   ox: number
   oy: number
@@ -70,44 +63,6 @@ function createGrainTile() {
     image.data[i + 3] = 255
   }
   ctx.putImageData(image, 0, 0)
-  return tile
-}
-
-function puff(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, alpha: number) {
-  const glow = ctx.createRadialGradient(x, y - ry * 0.35, rx * 0.08, x, y + ry * 0.15, rx)
-  glow.addColorStop(0, `rgba(255,255,255,${alpha})`)
-  glow.addColorStop(0.42, `rgba(255,255,255,${alpha * 0.72})`)
-  glow.addColorStop(1, 'rgba(255,255,255,0)')
-  ctx.fillStyle = glow
-  ctx.beginPath()
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2)
-  ctx.fill()
-}
-
-function createCloudBank(width: number, height: number, density: number) {
-  const tile = document.createElement('canvas')
-  tile.width = Math.max(640, Math.round(width))
-  tile.height = Math.max(120, Math.round(height))
-  const ctx = tile.getContext('2d')
-  if (!ctx) return tile
-
-  const count = Math.round((tile.width / 70) * density)
-  for (let i = 0; i < count; i += 1) {
-    const x = (i / count) * tile.width + rand(-18, 18)
-    const y = tile.height * rand(0.38, 0.72)
-    const rx = rand(48, 110)
-    const ry = rx * rand(0.42, 0.62)
-    puff(ctx, x, y, rx, ry, rand(0.55, 0.92))
-    puff(ctx, x + rand(-24, 24), y + rand(6, 18), rx * 0.7, ry * 0.7, rand(0.35, 0.7))
-  }
-
-  ctx.globalCompositeOperation = 'source-atop'
-  const shade = ctx.createLinearGradient(0, tile.height * 0.2, 0, tile.height)
-  shade.addColorStop(0, 'rgba(255,255,255,0)')
-  shade.addColorStop(1, 'rgba(186,208,230,0.28)')
-  ctx.fillStyle = shade
-  ctx.fillRect(0, 0, tile.width, tile.height)
-  ctx.globalCompositeOperation = 'source-over'
   return tile
 }
 
@@ -165,17 +120,8 @@ function seedScene(width: number, height: number, theme: Theme) {
         ]
       : []
 
-  const clouds: Cloud[] =
-    theme === 'light'
-      ? [
-          { x: 0, y: height * 0.58, speed: 0.18, sprite: createCloudBank(width * 1.35, height * 0.28, 0.9) },
-          { x: -width * 0.2, y: height * 0.66, speed: 0.32, sprite: createCloudBank(width * 1.5, height * 0.32, 1.15) },
-          { x: -width * 0.1, y: height * 0.74, speed: 0.48, sprite: createCloudBank(width * 1.6, height * 0.34, 1.3) },
-        ]
-      : []
-
   const comets = theme === 'dark' ? Array.from({ length: 5 }, () => spawnComet(width, height)) : []
-  return { stars, nebulae, clouds, comets, grain: createGrainTile() }
+  return { stars, nebulae, comets, grain: createGrainTile() }
 }
 
 function drawSky(ctx: CanvasRenderingContext2D, width: number, height: number, theme: Theme, t: number) {
@@ -190,22 +136,13 @@ function drawSky(ctx: CanvasRenderingContext2D, width: number, height: number, t
   }
 
   const sky = ctx.createLinearGradient(0, 0, 0, height)
-  sky.addColorStop(0, '#1f74c8')
-  sky.addColorStop(0.28, '#3b94de')
-  sky.addColorStop(0.58, '#6bb4ea')
-  sky.addColorStop(0.82, '#9fd0f3')
-  sky.addColorStop(1, '#cfe6f8')
+  sky.addColorStop(0, '#0b5fbe')
+  sky.addColorStop(0.35, '#1876d4')
+  sky.addColorStop(0.68, '#2d8ee4')
+  sky.addColorStop(1, '#4aa3ea')
   ctx.fillStyle = sky
   ctx.fillRect(0, 0, width, height)
-
-  const sunX = width * 0.72
-  const sunY = height * 0.16 + Math.sin(t * 0.0002) * 6
-  const sun = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, width * 0.55)
-  sun.addColorStop(0, 'rgba(255,248,220,0.95)')
-  sun.addColorStop(0.12, 'rgba(255,230,170,0.38)')
-  sun.addColorStop(1, 'rgba(255,220,150,0)')
-  ctx.fillStyle = sun
-  ctx.fillRect(0, 0, width, height)
+  void t
 }
 
 function drawNebulae(ctx: CanvasRenderingContext2D, nebulae: Nebula[], t: number) {
@@ -316,18 +253,6 @@ function drawComets(ctx: CanvasRenderingContext2D, comets: Comet[], width: numbe
   }
 }
 
-function drawClouds(ctx: CanvasRenderingContext2D, clouds: Cloud[], width: number, moving: boolean) {
-  for (const cloud of clouds) {
-    if (moving) {
-      cloud.x += cloud.speed
-      cloud.bob += cloud.bobSpeed
-    }
-    if (cloud.x > width + 40) cloud.x = -cloud.sprite.width - 30
-    const y = cloud.y + Math.sin(cloud.bob) * 8
-    ctx.drawImage(cloud.sprite, cloud.x, y)
-  }
-}
-
 function drawGrain(ctx: CanvasRenderingContext2D, tile: HTMLCanvasElement, width: number, height: number, theme: Theme) {
   ctx.save()
   ctx.globalAlpha = theme === 'dark' ? 0.16 : 0.2
@@ -377,8 +302,6 @@ export function AtmosphericBackdrop() {
         drawNebulae(ctx, scene.nebulae, t)
         drawStars(ctx, scene.stars, width, height, moving)
         drawComets(ctx, scene.comets, width, height, moving)
-      } else {
-        drawClouds(ctx, scene.clouds, width, moving)
       }
       drawGrain(ctx, scene.grain, width, height, theme)
       if (moving) frame = window.requestAnimationFrame(tick)
