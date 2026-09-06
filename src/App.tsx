@@ -4,6 +4,7 @@ import { CustomerLedgerPage } from '@/pages/CustomerLedgerPage'
 import { CustomerScanPage } from '@/pages/CustomerScanPage'
 import { CustomerSettlementPage } from '@/pages/CustomerSettlementPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { PayPage } from '@/pages/PayPage'
 import { ShopkeeperCreatePage } from '@/pages/ShopkeeperCreatePage'
 import { ShopkeeperDashboardPage } from '@/pages/ShopkeeperDashboardPage'
 import { ShopkeeperQrPage } from '@/pages/ShopkeeperQrPage'
@@ -16,7 +17,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/pay" element={<Navigate to="/customer" replace />} />
+      <Route path="/pay" element={<PayPage />} />
       <Route path="/shop" element={<Navigate to="/shopkeeper" replace />} />
       <Route element={<AppShell />}>
         <Route path="/customer" element={<CustomerDashboardPage />} />

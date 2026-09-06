@@ -1,19 +1,48 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite'
+import { loadEnv, type Connect, type Plugin, type PreviewServer, type ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
 import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
+import { DEFAULT_INDIAN_MALE_HINGLISH_VOICE_ID, ELEVENLABS_TTS_MODEL } from '../src/lib/elevenLabsVoice.ts'
 import type { KhataSnapshot, PayIntent } from '../src/lib/payLink.ts'
 import type { Item, PaymentMode } from '../src/legacy/types.ts'
 
 const STATE_PATH = join(process.cwd(), '.data', 'khata-state.json')
+const VOICE_TEXT_MAX = 300
+const VOICE_RATE_WINDOW_MS = 60_000
+const VOICE_RATE_MAX = 20
+
+let cachedEleven: { key: string; voiceId: string } | null = null
+const voiceHits = new Map<string, number[]>()
+
+function elevenLabsConfig() {
+  if (cachedEleven) return cachedEleven
+  const fileEnv = loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', process.cwd(), '')
+  cachedEleven = {
+    key: process.env.ELEVENLABS_API_KEY || fileEnv.ELEVENLABS_API_KEY || '',
+    voiceId: process.env.ELEVENLABS_VOICE_ID || fileEnv.ELEVENLABS_VOICE_ID || DEFAULT_INDIAN_MALE_HINGLISH_VOICE_ID,
+  }
+  return cachedEleven
+}
+
+function voiceAllowed(ip: string): boolean {
+  const now = Date.now()
+  const recent = (voiceHits.get(ip) ?? []).filter((at) => now - at < VOICE_RATE_WINDOW_MS)
+  if (recent.length >= VOICE_RATE_MAX) {
+    voiceHits.set(ip, recent)
+    return false
+  }
+  voiceHits.set(ip, [...recent, now])
+  return true
+}
 
 interface FileState extends KhataSnapshot {
   intents: PayIntent[]
 }
 
 const clients = new Set<ServerResponse>()
+const liveQrStore = new Map<string, Record<string, unknown>>()
 
 let state: FileState = loadState()
 
@@ -89,7 +118,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
   }
 
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') {
     res.statusCode = 204
@@ -191,10 +220,14 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
   }
 
   if (req.method === 'POST' && url.pathname === '/api/voice') {
+    const ip = req.socket.remoteAddress ?? 'unknown'
+    if (!voiceAllowed(ip)) {
+      json(res, 429, { error: 'Voice is rate limited. Try again shortly.' })
+      return
+    }
     const body = await readBody(req)
-    const text = String(body.text ?? '').trim()
-    const key = process.env.ELEVENLABS_API_KEY || process.env.VITE_ELEVENLABS_API_KEY
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || process.env.VITE_ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb'
+    const text = String(body.text ?? '').trim().slice(0, VOICE_TEXT_MAX)
+    const { key, voiceId } = elevenLabsConfig()
     if (!text) {
       json(res, 400, { error: 'Voice text is required.' })
       return
@@ -203,27 +236,33 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
       json(res, 503, { error: 'ElevenLabs is not configured.' })
       return
     }
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': key,
-        'Content-Type': 'application/json',
-        Accept: 'audio/mpeg',
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-      }),
-    })
-    if (!response.ok) {
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': key,
+          'Content-Type': 'application/json',
+          Accept: 'audio/mpeg',
+        },
+        body: JSON.stringify({
+          text,
+          model_id: ELEVENLABS_TTS_MODEL,
+          voice_settings: { stability: 0.45, similarity_boost: 0.8 },
+        }),
+      })
+      if (!response.ok) {
+        console.error('ElevenLabs TTS failed', response.status)
+        json(res, 502, { error: 'ElevenLabs could not speak this line.' })
+        return
+      }
+      const audio = Buffer.from(await response.arrayBuffer())
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'audio/mpeg')
+      res.end(audio)
+    } catch (error) {
+      console.error('ElevenLabs TTS request failed', error instanceof Error ? error.name : 'unknown')
       json(res, 502, { error: 'ElevenLabs could not speak this line.' })
-      return
     }
-    const audio = Buffer.from(await response.arrayBuffer())
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'audio/mpeg')
-    res.end(audio)
     return
   }
 

@@ -1,48 +1,48 @@
-import { QRScanner } from '@/components/QRScanner'
+import { CameraQrReader } from '@/components/CameraQrReader'
 import { TransactionConfirmation } from '@/components/TransactionConfirmation'
 import { Button } from '@/components/ui/button'
-import { buildDefaultPendingQr } from '@/data/demo'
 import { useKhata } from '@/hooks/useKhata'
-import { encodeQrPayload, formatInr } from '@/lib/utils'
+import { parseKhataQrValue } from '@/lib/khataQr'
+import { publishLiveQr } from '@/lib/liveQr'
+import { formatInr } from '@/lib/utils'
 import type { PendingQr } from '@/types'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 type Stage = 'scan' | 'found' | 'added'
 
 export function CustomerScanPage() {
-  const { state, prepareScanPayload, confirmPendingQr, markCustomerScanned } = useKhata()
+  const { state, applyScannedQr, markCustomerScanned } = useKhata()
   const navigate = useNavigate()
   const [stage, setStage] = useState<Stage>('scan')
-  const [scanning, setScanning] = useState(false)
-  const [draft, setDraft] = useState<PendingQr>(state.pendingQr ?? buildDefaultPendingQr())
+  const [draft, setDraft] = useState<PendingQr | null>(null)
   const [fromBalance, setFromBalance] = useState(state.wallet.outstanding)
   const [toBalance, setToBalance] = useState(state.wallet.outstanding)
   const [delta, setDelta] = useState(0)
   const [animStep, setAnimStep] = useState<0 | 1 | 2>(0)
 
-  const qrValue = useMemo(
-    () => encodeQrPayload({ id: draft.id, merchant: draft.merchant, amount: draft.amount }),
-    [draft],
+  const onRead = useCallback(
+    (value: string) => {
+      const parsed = parseKhataQrValue(value)
+      if (!parsed) {
+        toast.error('That QR is not an e-Khata bill.')
+        return
+      }
+      markCustomerScanned()
+      void publishLiveQr({ ...parsed, status: 'scanned' })
+      setDraft(parsed)
+      setStage('found')
+    },
+    [markCustomerScanned],
   )
 
-  function simulateScan() {
-    setScanning(true)
-    const payload = prepareScanPayload()
-    setDraft(payload)
-    markCustomerScanned()
-    window.setTimeout(() => {
-      setScanning(false)
-      setStage('found')
-    }, 700)
-  }
-
   function confirm() {
+    if (!draft) return
     const before = state.wallet.outstanding
-    confirmPendingQr(draft)
+    applyScannedQr(draft)
     setFromBalance(before)
     setToBalance(before + draft.amount)
     setDelta(draft.amount)
@@ -50,7 +50,7 @@ export function CustomerScanPage() {
     setAnimStep(0)
     window.setTimeout(() => setAnimStep(1), 700)
     window.setTimeout(() => setAnimStep(2), 1500)
-    toast.success('Transaction added', { description: 'Your E-Khata has been updated.' })
+    toast.success('Posted to the shop account')
   }
 
   return (
@@ -65,27 +65,18 @@ export function CustomerScanPage() {
             className="grid items-center gap-12 lg:grid-cols-2"
           >
             <div>
-              <p className="text-[13px] text-accent">Scan E-Khata QR</p>
+              <p className="text-[13px] text-accent">Scan with the camera</p>
               <h1 className="mt-2 font-display text-5xl leading-[1.05] text-foreground">Merchant credit</h1>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-                Scan a merchant transaction to add it to your digital khata. Sharma Stores, three items, ₹386
-                for the demo path.
+                Point this camera at the shop QR, or open the shop QR with your phone Camera app. Confirming
+                writes the bill to the shopkeeper account and your khata.
               </p>
-              <Button
-                size="lg"
-                className="mt-8"
-                data-testid="simulate-qr-scan"
-                onClick={simulateScan}
-                disabled={scanning}
-              >
-                {scanning ? 'Reading QR…' : 'Simulate QR Scan'}
-              </Button>
             </div>
-            <QRScanner active={scanning || stage === 'scan'} payload={qrValue} />
+            <CameraQrReader onRead={onRead} />
           </motion.div>
         ) : null}
 
-        {stage === 'found' ? (
+        {stage === 'found' && draft ? (
           <motion.div
             key="found"
             initial={{ opacity: 0, y: 12 }}
@@ -122,8 +113,8 @@ export function CustomerScanPage() {
             <div className="mx-auto mb-6 grid size-14 place-items-center rounded-full bg-primary/15 text-primary">
               <Check className="size-7" />
             </div>
-            <p className="text-[11px] tracking-[0.2em] text-primary uppercase">Transaction added</p>
-            <p className="mt-2 text-muted-foreground">Your E-Khata has been updated.</p>
+            <p className="text-[11px] tracking-[0.2em] text-primary uppercase">Posted to the shop</p>
+            <p className="mt-2 text-muted-foreground">Your khata and the shopkeeper account are updated.</p>
             <div className="mt-10 space-y-4 font-display text-6xl text-foreground">
               {animStep === 0 ? <motion.p layout>{formatInr(fromBalance)}</motion.p> : null}
               {animStep === 1 ? (

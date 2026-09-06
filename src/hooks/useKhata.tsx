@@ -4,6 +4,8 @@ import {
   RFID_FARE,
   STORAGE_KEY,
 } from '@/data/demo'
+import { applyPendingQr } from '@/lib/applyPendingQr'
+import { publishLiveQr } from '@/lib/liveQr'
 import { formatSequenceId } from '@/lib/utils'
 import type {
   KhataState,
@@ -66,6 +68,7 @@ interface KhataContextValue {
   }) => PendingQr
   markCustomerScanned: () => void
   confirmFromMerchant: () => Transaction | null
+  applyScannedQr: (pending: PendingQr) => Transaction | null
   settleStore: (merchant: string) => void
   settleKhata: () => void
 }
@@ -121,58 +124,12 @@ export function KhataProvider({ children }: { children: ReactNode }) {
 
   const ingestConfirmed = useCallback(
     (prev: KhataState, pending: PendingQr): { next: KhataState; tx: Transaction } => {
-      const existing = prev.transactions.find((tx) => tx.id === pending.id)
-      if (existing) {
-        return {
-          next: {
-            ...prev,
-            pendingQr: { ...pending, status: 'confirmed' },
-          },
-          tx: existing,
-        }
+      const next = applyPendingQr(prev, pending)
+      const tx = next.transactions.find((row) => row.id === pending.id)
+      if (!tx) {
+        return { next: prev, tx: next.transactions[0] }
       }
-      const tx: Transaction = {
-        id: pending.id,
-        merchant: pending.merchant,
-        customerName: pending.customerName,
-        category: pending.category,
-        amount: pending.amount,
-        items: pending.items,
-        source: 'QR',
-        status: 'verified',
-        timestamp: new Date().toISOString(),
-        verification: verifiedForSource('QR', true),
-        settled: false,
-      }
-      const isHomeMerchant = pending.merchant === prev.merchant.name
-      return {
-        tx,
-        next: {
-          ...prev,
-          wallet: {
-            ...prev.wallet,
-            outstanding: prev.wallet.outstanding + pending.amount,
-          },
-          merchant: {
-            ...prev.merchant,
-            outstanding: isHomeMerchant
-              ? prev.merchant.outstanding + pending.amount
-              : prev.merchant.outstanding,
-            pendingConfirmations: Math.max(0, prev.merchant.pendingConfirmations - 1),
-          },
-          transactions: [tx, ...prev.transactions],
-          pendingQr: { ...pending, status: 'confirmed' },
-          shopkeeperRecent: [
-            {
-              id: tx.id,
-              customerName: tx.customerName,
-              amount: tx.amount,
-              status: 'verified',
-            },
-            ...prev.shopkeeperRecent.filter((row) => row.id !== tx.id),
-          ],
-        },
-      }
+      return { next, tx }
     },
     [],
   )
@@ -180,10 +137,11 @@ export function KhataProvider({ children }: { children: ReactNode }) {
   const confirmPendingQr = useCallback((draft?: PendingQr): Transaction | null => {
     let created: Transaction | null = null
     commit((prev) => {
-      const pending = prev.pendingQr ?? draft ?? null
+      const pending = draft ?? prev.pendingQr ?? null
       if (!pending) return prev
       const { next, tx } = ingestConfirmed(prev, pending)
       created = tx
+      void publishLiveQr({ ...pending, status: 'confirmed' })
       return next
     })
     return created
@@ -236,6 +194,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
           category: input.category ?? 'Groceries',
           status: 'waiting',
         }
+        void publishLiveQr(payload)
         return {
           ...prev,
           pendingQr: payload,
@@ -254,7 +213,9 @@ export function KhataProvider({ children }: { children: ReactNode }) {
   const markCustomerScanned = useCallback(() => {
     commit((prev) => {
       if (!prev.pendingQr || prev.pendingQr.status === 'confirmed') return prev
-      return { ...prev, pendingQr: { ...prev.pendingQr, status: 'scanned' } }
+      const next = { ...prev.pendingQr, status: 'scanned' as const }
+      void publishLiveQr(next)
+      return { ...prev, pendingQr: next }
     })
   }, [commit])
 
@@ -264,10 +225,18 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       if (!prev.pendingQr) return prev
       const { next, tx } = ingestConfirmed(prev, prev.pendingQr)
       created = tx
+      void publishLiveQr({ ...prev.pendingQr, status: 'confirmed' })
       return next
     })
     return created
   }, [commit, ingestConfirmed])
+
+  const applyScannedQr = useCallback(
+    (pending: PendingQr): Transaction | null => {
+      return confirmPendingQr(pending)
+    },
+    [confirmPendingQr],
+  )
 
   const settleStore = useCallback((merchant: string) => {
     commit((prev) => {
@@ -347,6 +316,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       createMerchantQr,
       markCustomerScanned,
       confirmFromMerchant,
+      applyScannedQr,
       settleStore,
       settleKhata,
     }),
@@ -360,6 +330,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       createMerchantQr,
       markCustomerScanned,
       confirmFromMerchant,
+      applyScannedQr,
       settleStore,
       settleKhata,
     ],

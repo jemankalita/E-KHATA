@@ -1,13 +1,13 @@
 import { QRCodeSVG } from 'qrcode.react'
-import { encodeQrPayload, formatInr } from '@/lib/utils'
+import { buildKhataQrUrl } from '@/lib/khataQr'
+import { formatInr } from '@/lib/utils'
 import type { PendingQr } from '@/types'
 
 export function QRGenerator({ pending }: { pending: PendingQr }) {
-  const payload = encodeQrPayload({
-    id: pending.id,
-    merchant: pending.merchant,
-    amount: pending.amount,
-  })
+  const payload = buildKhataQrUrl(
+    typeof window === 'undefined' ? 'http://localhost:5173' : window.location.origin,
+    pending,
+  )
 
   return (
     <div className="rounded-[28px] bg-card p-6 text-center">
@@ -23,6 +23,7 @@ export function QRGenerator({ pending }: { pending: PendingQr }) {
         Transaction ID
       </p>
       <p className="mt-1 font-mono text-sm text-foreground">{pending.id}</p>
+      <p className="mt-4 break-all text-[11px] leading-relaxed text-muted-foreground">{payload}</p>
     </div>
   )
 }
