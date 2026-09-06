@@ -1,24 +1,34 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
-import { LandingPage } from './LandingPage'
+import { describe, expect, it, vi } from 'vitest'
+import { LoginPage } from './LoginPage'
 
-function renderLanding() {
-  return render(
-    <MemoryRouter>
-      <LandingPage />
-    </MemoryRouter>,
-  )
-}
+vi.mock('@/hooks/useKhata', () => ({
+  useKhata: () => ({
+    setRole: vi.fn(),
+    resetDemo: vi.fn(),
+  }),
+}))
 
-describe('LandingPage', () => {
-  it('offers two account paths without scan or month-end settlement copy', () => {
-    renderLanding()
-    expect(screen.getByRole('heading', { name: /traditional credit/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /continue as customer/i })).toHaveAttribute('href', '/customer')
-    expect(screen.getByRole('link', { name: /continue as shopkeeper/i })).toHaveAttribute('href', '/shop')
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({
+    theme: 'dark',
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+}))
+
+describe('LoginPage', () => {
+  it('offers two account paths without customer scan or month-end settlement copy', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('heading', { name: /trust captured/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue as\s*customer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue as\s*shopkeeper/i })).toBeInTheDocument()
     expect(screen.queryByText(/month end/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/scan/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/phone/i)).not.toBeInTheDocument()
   })
 })

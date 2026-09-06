@@ -1,36 +1,32 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AppShell } from './components/AppShell'
-import { CustomerHomePage } from './pages/CustomerHomePage'
-import { DashboardPage } from './pages/DashboardPage'
-import { LandingPage } from './pages/LandingPage'
-import { LedgerPage } from './pages/LedgerPage'
-import { MatchPage } from './pages/MatchPage'
-import { PayPage } from './pages/PayPage'
-import { QrPage } from './pages/QrPage'
-import { QuickQrPage } from './pages/QuickQrPage'
-import { SettlementPage } from './pages/SettlementPage'
-import { SuccessPage } from './pages/SuccessPage'
-import { UploadPage } from './pages/UploadPage'
+import { AppShell } from '@/layouts/AppShell'
+import { CustomerDashboardPage } from '@/pages/CustomerDashboardPage'
+import { CustomerLedgerPage } from '@/pages/CustomerLedgerPage'
+import { CustomerSettlementPage } from '@/pages/CustomerSettlementPage'
+import { LoginPage } from '@/pages/LoginPage'
+import { ShopkeeperCreatePage } from '@/pages/ShopkeeperCreatePage'
+import { ShopkeeperDashboardPage } from '@/pages/ShopkeeperDashboardPage'
+import { ShopkeeperQrPage } from '@/pages/ShopkeeperQrPage'
+import { TermsPage } from '@/pages/TermsPage'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/customer" element={<CustomerHomePage />} />
-        <Route path="/pay" element={<PayPage />} />
-        <Route path="/shop" element={<AppShell />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="upload" element={<UploadPage />} />
-          <Route path="match" element={<MatchPage />} />
-          <Route path="qr" element={<QrPage />} />
-          <Route path="quick-qr" element={<QuickQrPage />} />
-          <Route path="success" element={<SuccessPage />} />
-          <Route path="ledger" element={<LedgerPage />} />
-          <Route path="settlement" element={<SettlementPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/pay" element={<Navigate to="/customer" replace />} />
+      <Route path="/customer/scan" element={<Navigate to="/customer" replace />} />
+      <Route path="/shop" element={<Navigate to="/shopkeeper" replace />} />
+      <Route element={<AppShell />}>
+        <Route path="/customer" element={<CustomerDashboardPage />} />
+        <Route path="/customer/ledger" element={<CustomerLedgerPage />} />
+        <Route path="/customer/settlement" element={<CustomerSettlementPage />} />
+        <Route path="/shopkeeper" element={<ShopkeeperDashboardPage />} />
+        <Route path="/shopkeeper/create" element={<ShopkeeperCreatePage />} />
+        <Route path="/shopkeeper/qr" element={<ShopkeeperQrPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   )
 }
