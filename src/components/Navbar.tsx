@@ -2,7 +2,7 @@ import { BrandWordmark } from '@/components/BrandLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useKhata } from '@/hooks/useKhata'
 import { cn } from '@/lib/utils'
-import { Sparkles } from 'lucide-react'
+import { QrCode, Sparkles } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 export function SiteHeader() {
@@ -21,20 +21,19 @@ export function SiteHeader() {
       ]
     : [
         { to: '/customer', label: 'Home' },
+        { to: '/customer/scan', label: 'Scan' },
         { to: '/customer/ledger', label: 'Ledger' },
         { to: '/customer/settlement', label: 'Settle' },
       ]
 
   const primary = isShop
     ? { to: '/shopkeeper/create', label: 'New bill' }
-    : { to: '/customer/ledger', label: 'My khata' }
+    : { to: '/customer/scan', label: 'Scan QR' }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-8 px-6 py-2">
-        <Link to={home} className="leading-none">
-          <BrandWordmark showTagline />
-        </Link>
+        <BrandWordmark showTagline />
         <nav className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
             <Link
@@ -56,7 +55,7 @@ export function SiteHeader() {
             to={primary.to}
             className="hidden items-center gap-2 rounded-full bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground sm:inline-flex"
           >
-            <Sparkles className="size-4" />
+            {isShop ? <Sparkles className="size-4" /> : <QrCode className="size-4" />}
             {primary.label}
           </Link>
           <ThemeToggle />

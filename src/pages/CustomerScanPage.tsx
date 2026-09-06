@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 type Stage = 'scan' | 'found' | 'added'
 
 export function CustomerScanPage() {
-  const { state, prepareScanPayload, confirmPendingQr } = useKhata()
+  const { state, prepareScanPayload, confirmPendingQr, markCustomerScanned } = useKhata()
   const navigate = useNavigate()
   const [stage, setStage] = useState<Stage>('scan')
   const [scanning, setScanning] = useState(false)
@@ -33,6 +33,7 @@ export function CustomerScanPage() {
     setScanning(true)
     const payload = prepareScanPayload()
     setDraft(payload)
+    markCustomerScanned()
     window.setTimeout(() => {
       setScanning(false)
       setStage('found')

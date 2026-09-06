@@ -12,7 +12,7 @@ import { formatDateTime, formatInr } from '@/lib/utils'
 import type { Transaction } from '@/types'
 import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 export function CustomerLedgerPage() {
   const { state } = useKhata()
@@ -33,7 +33,11 @@ export function CustomerLedgerPage() {
         You have {openTxs.length} khata entries.
       </h1>
       <p className="mt-3 rounded-[20px] bg-primary/15 px-4 py-3 text-[14px] text-primary">
-        Both parties share the same record before it hits your balance.
+        Both parties share the same record before it hits your balance.{' '}
+        <Link to="/customer/scan" className="underline underline-offset-4">
+          Scan a shop QR
+        </Link>
+        .
       </p>
 
       <div className="relative mt-10">

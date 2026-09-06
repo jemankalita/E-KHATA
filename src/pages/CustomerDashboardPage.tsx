@@ -12,7 +12,7 @@ import { RFID_FARE } from '@/data/demo'
 import { useKhata } from '@/hooks/useKhata'
 import { formatInr } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import { ArrowRight, Nfc, Radio } from 'lucide-react'
+import { ArrowRight, Nfc, QrCode, Radio } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -57,7 +57,10 @@ export function CustomerDashboardPage() {
               Find out <ArrowRight className="size-3.5" />
             </span>
           </button>
-          <Button className="sm:col-span-2" onClick={() => navigate('/customer/ledger')}>
+          <Button className="sm:col-span-2" onClick={() => navigate('/customer/scan')}>
+            <QrCode /> Scan a shop QR
+          </Button>
+          <Button variant="secondary" className="sm:col-span-2" onClick={() => navigate('/customer/ledger')}>
             Open my khata
           </Button>
         </div>

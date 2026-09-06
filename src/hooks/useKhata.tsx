@@ -66,6 +66,7 @@ interface KhataContextValue {
   }) => PendingQr
   markCustomerScanned: () => void
   confirmFromMerchant: () => Transaction | null
+  settleStore: (merchant: string) => void
   settleKhata: () => void
 }
 
@@ -268,6 +269,40 @@ export function KhataProvider({ children }: { children: ReactNode }) {
     return created
   }, [commit, ingestConfirmed])
 
+  const settleStore = useCallback((merchant: string) => {
+    commit((prev) => {
+      const openForStore = prev.transactions.filter((tx) => !tx.settled && tx.merchant === merchant)
+      if (openForStore.length === 0) return prev
+      const amount = openForStore.reduce((sum, tx) => sum + tx.amount, 0)
+      const transactions = prev.transactions.map((tx) =>
+        !tx.settled && tx.merchant === merchant ? { ...tx, settled: true } : tx,
+      )
+      const remainingOpen = transactions.some((tx) => !tx.settled)
+      const isHomeMerchant = merchant === prev.merchant.name
+      return {
+        ...prev,
+        wallet: {
+          ...prev.wallet,
+          outstanding: Math.max(0, prev.wallet.outstanding - amount),
+        },
+        merchant: isHomeMerchant
+          ? {
+              ...prev.merchant,
+              outstanding: Math.max(0, prev.merchant.outstanding - amount),
+            }
+          : prev.merchant,
+        transactions,
+        settlement: remainingOpen
+          ? prev.settlement
+          : {
+              ...prev.settlement,
+              status: 'cleared',
+              clearedAt: new Date().toISOString(),
+            },
+      }
+    })
+  }, [commit])
+
   const settleKhata = useCallback(() => {
     commit((prev) => {
       const sharmaShare = prev.transactions
@@ -312,6 +347,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       createMerchantQr,
       markCustomerScanned,
       confirmFromMerchant,
+      settleStore,
       settleKhata,
     }),
     [
@@ -324,6 +360,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       createMerchantQr,
       markCustomerScanned,
       confirmFromMerchant,
+      settleStore,
       settleKhata,
     ],
   )

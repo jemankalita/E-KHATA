@@ -1,4 +1,6 @@
+import { AtmosphericBackdrop } from '@/components/AtmosphericBackdrop'
 import { BrandWordmark } from '@/components/BrandLogo'
+import { LoginScanScene } from '@/components/LoginScanScene'
 import { TermsLink } from '@/components/TermsLink'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
@@ -11,7 +13,8 @@ export function LoginPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="relative min-h-svh bg-transparent">
+      <AtmosphericBackdrop />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <BrandWordmark />
         <div className="flex items-center gap-3">
@@ -40,6 +43,7 @@ export function LoginPage() {
             Traditional store credit, written as a shared digital khata. Merchant, customer, one record. The
             shopkeeper posts each bill to an account.
           </p>
+          <LoginScanScene />
         </div>
 
         <div className="space-y-3">

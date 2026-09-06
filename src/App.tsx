@@ -1,6 +1,7 @@
 import { AppShell } from '@/layouts/AppShell'
 import { CustomerDashboardPage } from '@/pages/CustomerDashboardPage'
 import { CustomerLedgerPage } from '@/pages/CustomerLedgerPage'
+import { CustomerScanPage } from '@/pages/CustomerScanPage'
 import { CustomerSettlementPage } from '@/pages/CustomerSettlementPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { ShopkeeperCreatePage } from '@/pages/ShopkeeperCreatePage'
@@ -16,10 +17,10 @@ export default function App() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/pay" element={<Navigate to="/customer" replace />} />
-      <Route path="/customer/scan" element={<Navigate to="/customer" replace />} />
       <Route path="/shop" element={<Navigate to="/shopkeeper" replace />} />
       <Route element={<AppShell />}>
         <Route path="/customer" element={<CustomerDashboardPage />} />
+        <Route path="/customer/scan" element={<CustomerScanPage />} />
         <Route path="/customer/ledger" element={<CustomerLedgerPage />} />
         <Route path="/customer/settlement" element={<CustomerSettlementPage />} />
         <Route path="/shopkeeper" element={<ShopkeeperDashboardPage />} />
