@@ -1,4 +1,4 @@
-import type { Customer, Item, PaymentMode, Transaction, TransactionStatus } from '../types'
+import type { Customer, Item, PaymentMode, Transaction, TransactionStatus } from '../legacy/types'
 import type { PayIntent } from './payLink'
 
 export interface CustomerRow {

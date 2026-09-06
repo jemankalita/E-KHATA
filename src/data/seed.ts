@@ -1,4 +1,4 @@
-import type { Customer, Transaction } from '../types'
+import type { Customer, Transaction } from '../legacy/types'
 
 export const MERCHANT_NAME = 'Kalita Kirana'
 

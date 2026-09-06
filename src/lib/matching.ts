@@ -1,4 +1,4 @@
-import type { Item, Product } from '../types'
+import type { Item, Product } from '../legacy/types'
 
 export function normalizeName(value: string): string {
   return value

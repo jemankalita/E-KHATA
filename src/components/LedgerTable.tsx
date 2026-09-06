@@ -2,7 +2,7 @@ import { motion } from 'motion/react'
 import { springs } from '../lib/motion-tokens'
 import { staggerContainer, useStaggerItem } from '../lib/useSafeMotion'
 import { formatDateTime, formatRupee } from '../lib/format'
-import type { Transaction } from '../types'
+import type { Transaction } from '../legacy/types'
 import { StatusBadge } from './ui/StatusBadge'
 
 function itemSummary(tx: Transaction): string {

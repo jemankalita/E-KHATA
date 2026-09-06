@@ -6,7 +6,7 @@ import { recognizeBill } from '../lib/ocr'
 import { autoSettleDue } from '../lib/khata'
 import { confirmIntent, confirmIntentLocal, createIntent, fetchSnapshot, settleLocal, settleRemote } from '../lib/persist'
 import { playConfirmation } from '../lib/voice'
-import type { BillDraft, Customer, Item, PaymentMode, QuickQRDraft, Transaction } from '../types'
+import type { BillDraft, Customer, Item, PaymentMode, QuickQRDraft, Transaction } from '../legacy/types'
 
 interface ToastState {
   message: string

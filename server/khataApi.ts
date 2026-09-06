@@ -5,7 +5,7 @@ import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
 import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
 import type { KhataSnapshot, PayIntent } from '../src/lib/payLink.ts'
-import type { Item, PaymentMode } from '../src/types.ts'
+import type { Item, PaymentMode } from '../src/legacy/types.ts'
 
 const STATE_PATH = join(process.cwd(), '.data', 'khata-state.json')
 

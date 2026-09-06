@@ -12,7 +12,7 @@ import {
   type PayIntentRow,
   type TransactionRow,
 } from './supabaseRows'
-import type { Customer, Item, Transaction } from '../types'
+import type { Customer, Item, Transaction } from '../legacy/types'
 import type { PayIntent } from './payLink'
 
 const customerRow: CustomerRow = {

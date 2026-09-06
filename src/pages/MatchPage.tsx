@@ -9,7 +9,7 @@ import { formatRupee } from '../lib/format'
 import { springs } from '../lib/motion-tokens'
 import { staggerContainer, useStaggerItem } from '../lib/useSafeMotion'
 import { useKhata } from '../store/KhataStore'
-import type { Item } from '../types'
+import type { Item } from '../legacy/types'
 
 function toneFor(item: Item): 'matched' | 'uncertain' | 'unmatched' {
   if (!item.matchedProductId) return 'unmatched'

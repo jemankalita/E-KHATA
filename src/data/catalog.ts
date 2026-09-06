@@ -1,4 +1,4 @@
-import type { Product } from '../types'
+import type { Product } from '../legacy/types'
 
 export const PRODUCT_CATALOG: Product[] = [
   { id: 'parle-g', name: 'Parle-G', aliases: ['parle g', 'parleg', 'glucose biscuit'], unitPrice: 10 },

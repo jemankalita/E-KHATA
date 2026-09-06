@@ -1,5 +1,5 @@
 import type { KhataSnapshot } from './payLink'
-import type { Customer, Item, PaymentMode, Transaction } from '../types'
+import type { Customer, Item, PaymentMode, Transaction } from '../legacy/types'
 import { addToKhata, autoSettleDue, settleCustomer } from './khata'
 import { CUSTOMERS, TRANSACTIONS } from '../data/seed'
 

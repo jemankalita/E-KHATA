@@ -1,4 +1,4 @@
-import type { Customer, Item, PaymentMode, Transaction } from '../types'
+import type { Customer, Item, PaymentMode, Transaction } from '../legacy/types'
 import { createReferenceId } from './format'
 
 export interface AddToKhataInput {

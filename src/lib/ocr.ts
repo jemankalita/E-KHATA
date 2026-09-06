@@ -1,4 +1,4 @@
-import type { BillDraft, Item } from '../types'
+import type { BillDraft, Item } from '../legacy/types'
 import { PRODUCT_CATALOG } from '../data/catalog'
 import { matchItems, matchProduct, overallConfidence } from './matching'
 
