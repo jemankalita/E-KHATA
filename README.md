@@ -23,7 +23,7 @@ Open the [live demo](https://ekhata-gamma.vercel.app/) and use **Continue as sho
 | Role | What to do |
 | --- | --- |
 | Shopkeeper | Open **Scan bill**, photograph or upload a receipt, review the extracted lines, then post to the customer’s khata. Sample bills: [`samples/ocr-bills/`](samples/ocr-bills/print.html) (print HTML or the PNG files). Hear the **ElevenLabs** Sia (Warm & Real Companion) confirmation for that amount (when the API key is configured). |
-| Customer | Open **My khata** and **Settlement**. There is **no Scan QR** path — the customer never scans. Balance and due date update from the same account. |
+| Customer | Home shows the **outstanding graph**, **QR vs RFID** split, and **automatic RFID listen**. **Scan a pack** has sample photos (`samples/packs/`). Demo UIDs: `EKRFID21G`, `EKRFIDMETRO`, `EKRFIDCANTEEN`. |
 | Settlement | Due date is **30 September 2026**. When that date passes, the khata **auto-settles**. There is no shopkeeper Settle button. |
 | RFID prototype | Customer home **listens automatically**. Hold an NFC card (Web NFC) or scan a USB RFID wedge UID — a known card posts the fare with no confirm tap. Demo UID: `EKRFID21G`. |
 

@@ -1,5 +1,36 @@
 import type { Product } from '../legacy/types'
 
+export const SAMPLE_PACKS = [
+  {
+    id: 'milk',
+    title: 'Amul Taaza',
+    ocrText: 'AMUL TAAZA TONED MILK 500ml',
+    image: '/samples/packs/01-amul-milk.png',
+    unitPrice: 32,
+  },
+  {
+    id: 'parle-g',
+    title: 'Parle-G',
+    ocrText: 'PARLE-G GLUCOSE BISCUIT',
+    image: '/samples/packs/02-parle-g.png',
+    unitPrice: 10,
+  },
+  {
+    id: 'maggi',
+    title: 'Maggi',
+    ocrText: 'MAGGI 2 MINUTE NOODLES',
+    image: '/samples/packs/03-maggi.png',
+    unitPrice: 14,
+  },
+  {
+    id: 'chips',
+    title: 'Lays Chips',
+    ocrText: 'LAYS CHIPS POTATO CHIPS',
+    image: '/samples/packs/04-lays-chips.png',
+    unitPrice: 20,
+  },
+] as const
+
 export const PRODUCT_CATALOG: Product[] = [
   { id: 'parle-g', name: 'Parle-G', aliases: ['parle g', 'parleg', 'glucose biscuit'], unitPrice: 10 },
   { id: 'maggi', name: 'Maggi', aliases: ['maggi noodles', 'noodles', '2 minute', '2 minute noodles'], unitPrice: 14 },

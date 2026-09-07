@@ -20,17 +20,19 @@ export function SiteHeader() {
     ? [
         { to: '/shopkeeper', label: 'Home' },
         { to: '/shopkeeper/create', label: 'New bill' },
+        { to: '/shopkeeper/upload', label: 'Scan' },
         { to: '/shopkeeper/qr', label: 'QR' },
       ]
     : [
         { to: '/customer', label: 'Home' },
         { to: '/customer/scan', label: 'Scan' },
-        { to: '/customer/settlement', label: 'Pay' },
+        { to: '/customer/ledger', label: 'Ledger' },
+        { to: '/customer/settlement', label: 'Settle' },
       ]
 
   const primary = isShop
     ? { to: '/shopkeeper/create', label: 'New bill' }
-    : { to: '/customer/settlement', label: 'Pay' }
+    : { to: '/customer/scan', label: 'Scan' }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">

@@ -7,6 +7,7 @@ vi.mock('@/hooks/useKhata', () => ({
   useKhata: () => ({
     state: {
       merchant: { name: 'Sharma Stores', outstanding: 18420, activeCustomers: 32, pendingConfirmations: 4 },
+      wallet: { nextSettlement: '30 September 2026' },
       notices: [
         {
           id: 'n1',
@@ -25,6 +26,8 @@ vi.mock('@/hooks/useKhata', () => ({
           merchant: 'Sharma Stores',
           amount: 386,
           settled: false,
+          status: 'verified',
+          timestamp: '2026-09-06T08:14:00.000Z',
           payBy: '2026-09-30T18:00:00.000Z',
         },
         {
@@ -33,6 +36,8 @@ vi.mock('@/hooks/useKhata', () => ({
           merchant: 'Sharma Stores',
           amount: 240,
           settled: false,
+          status: 'verified',
+          timestamp: '2026-09-05T11:20:00.000Z',
           payBy: '2026-09-15T18:00:00.000Z',
         },
       ],
@@ -41,13 +46,13 @@ vi.mock('@/hooks/useKhata', () => ({
 }))
 
 describe('ShopkeeperDashboardPage', () => {
-  it('lists each customer balance without a ledger chart', () => {
+  it('lists each customer balance with a collections chart', () => {
     render(
       <MemoryRouter>
         <ShopkeeperDashboardPage />
       </MemoryRouter>,
     )
-    expect(screen.queryByRole('img', { name: /outstanding over recent entries/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /outstanding over recent entries/i })).toBeInTheDocument()
     expect(screen.getByText(/who still has to pay/i)).toBeInTheDocument()
     expect(screen.getByText('Rahul Sharma')).toBeInTheDocument()
     expect(screen.getByText('Aman Verma')).toBeInTheDocument()

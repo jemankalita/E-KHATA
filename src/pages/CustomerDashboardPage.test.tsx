@@ -12,8 +12,27 @@ vi.mock('@/hooks/useKhata', () => ({
     addRfidFare,
     state: {
       customer: { name: 'Rahul Sharma' },
-      wallet: { outstanding: 1240, nextSettlement: '30 September 2026', carriedForward: 0 },
-      transactions: [],
+      wallet: { outstanding: 1240, nextSettlement: '30 September 2026', carriedForward: 754 },
+      transactions: [
+        {
+          id: 'qr',
+          customerName: 'Rahul Sharma',
+          merchant: 'Sharma Stores',
+          amount: 466,
+          source: 'QR',
+          settled: false,
+          timestamp: '2026-09-06T08:14:00.000Z',
+        },
+        {
+          id: 'rfid',
+          customerName: 'Rahul Sharma',
+          merchant: 'Bus Route 21G',
+          amount: 20,
+          source: 'RFID',
+          settled: false,
+          timestamp: '2026-09-06T10:05:00.000Z',
+        },
+      ],
       notices: [],
     },
   }),
@@ -38,11 +57,11 @@ describe('CustomerDashboardPage RFID', () => {
     expect(screen.queryByRole('button', { name: /simulate a bus tap/i })).not.toBeInTheDocument()
   })
 
-  it('shows what to pay instead of a ledger chart', () => {
+  it('shows the outstanding graph and RFID split', () => {
     renderDashboard()
-    expect(screen.queryByRole('img', { name: /outstanding over recent entries/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /to pay/i })).toBeInTheDocument()
-    expect(screen.getByText(/due 30 september 2026/i)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /outstanding over recent entries/i })).toBeInTheDocument()
+    expect(screen.getByText(/qr khata/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /scan a pack/i })).toBeInTheDocument()
   })
 
   it('posts the fare when a known card is recognized', async () => {

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>E-Khata sample packs for Scan a pack</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        background: #e8e4dc;
+        color: #111;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      .guide {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 20px 8px;
+      }
+      .guide h1 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+      }
+      .guide p {
+        margin: 0 0 8px;
+        line-height: 1.45;
+        color: #333;
+      }
+      .packs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+        justify-content: center;
+        padding: 16px 16px 48px;
+      }
+      .pack {
+        width: 280px;
+        background: #fff;
+        padding: 18px 18px 22px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+      }
+      .pack img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        background: #ddd;
+      }
+      .pack pre {
+        margin: 14px 0 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 18px;
+        line-height: 1.4;
+        letter-spacing: 0.02em;
+        white-space: pre-wrap;
+      }
+      @media print {
+        .guide {
+          display: none;
+        }
+        body {
+          background: #fff;
+        }
+        .packs {
+          display: block;
+          padding: 0;
+        }
+        .pack {
+          box-shadow: none;
+          page-break-after: always;
+          width: 90mm;
+          margin: 0 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="guide">
+      <h1>Sample packs for Scan a pack</h1>
+      <p>
+        On the customer home tap <strong>Scan a pack</strong>, then either tap one of these photos in
+        the app or print / screenshot a label and upload it. OCR looks for catalog names such as
+        AMUL TAAZA, PARLE-G, MAGGI, and LAYS CHIPS.
+      </p>
+    </div>
+    <div class="packs">
+      <article class="pack">
+        <img src="./01-amul-milk.png" alt="Amul Taaza milk carton" />
+        <pre>AMUL TAAZA
+TONED MILK 500ml</pre>
+      </article>
+      <article class="pack">
+        <img src="./02-parle-g.png" alt="Parle-G biscuit pack" />
+        <pre>PARLE-G
+GLUCOSE BISCUIT</pre>
+      </article>
+      <article class="pack">
+        <img src="./03-maggi.png" alt="Maggi noodles pack" />
+        <pre>MAGGI
+2 MINUTE NOODLES</pre>
+      </article>
+      <article class="pack">
+        <img src="./04-lays-chips.png" alt="Lays chips pack" />
+        <pre>LAYS CHIPS
+POTATO CHIPS</pre>
+      </article>
+    </div>
+  </body>
+</html>

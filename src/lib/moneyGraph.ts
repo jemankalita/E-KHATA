@@ -64,6 +64,27 @@ export function yTicks(min: number, max: number, count = 4): number[] {
   return ticks
 }
 
+export function ledgerSpark(
+  opening: number,
+  entries: Array<{ amount: number; timestamp: string }>,
+): { values: number[]; labels: string[] } {
+  const sorted = [...entries].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+  if (sorted.length === 0) {
+    return { values: [opening], labels: ['Open', 'Now'] }
+  }
+  const values = cumulativeSeries(
+    opening,
+    sorted.map((entry) => entry.amount),
+  )
+  const labels = [
+    'Open',
+    ...sorted.map((entry) =>
+      new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(entry.timestamp)),
+    ),
+  ]
+  return { values, labels }
+}
+
 export function sparkPath(values: number[], width: number, height: number, pad = 4): string {
   if (values.length === 0) return ''
   const min = Math.min(...values)

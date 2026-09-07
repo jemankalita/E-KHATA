@@ -1,7 +1,7 @@
 import { CameraPackReader } from '@/components/CameraPackReader'
 import { CameraQrReader } from '@/components/CameraQrReader'
 import { Button } from '@/components/ui/button'
-import { PRODUCT_CATALOG } from '@/data/catalog'
+import { PRODUCT_CATALOG, SAMPLE_PACKS } from '@/data/catalog'
 import { useAutomaticRfid } from '@/hooks/useAutomaticRfid'
 import { useKhata } from '@/hooks/useKhata'
 import { publishLiveQr } from '@/lib/liveQr'
@@ -120,17 +120,43 @@ export function CustomerScanPage() {
                   QR bill
                 </Button>
               </div>
-              <section className="mt-8">
-                <h2 className="font-display text-2xl text-foreground">Shop catalog</h2>
-                <ul className="mt-4 divide-y divide-border rounded-[24px] bg-card">
-                  {PRODUCT_CATALOG.map((product) => (
-                    <li key={product.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                      <span className="text-foreground">{product.name}</span>
-                      <span className="text-muted-foreground">{formatInr(product.unitPrice)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              {mode === 'pack' ? (
+                <section className="mt-8">
+                  <h2 className="font-display text-2xl text-foreground">Sample packs</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tap a photo to post that pack, or upload your own shot of the packet.
+                  </p>
+                  <ul className="mt-4 grid grid-cols-2 gap-3">
+                    {SAMPLE_PACKS.map((pack) => (
+                      <li key={pack.id}>
+                        <button
+                          type="button"
+                          onClick={() => onRead(pack.ocrText)}
+                          className="w-full overflow-hidden rounded-[20px] bg-card text-left"
+                        >
+                          <img src={pack.image} alt="" className="aspect-square w-full object-cover" />
+                          <span className="block px-3 py-2 text-sm text-foreground">{pack.title}</span>
+                          <span className="block px-3 pb-3 text-xs text-muted-foreground">
+                            {formatInr(pack.unitPrice)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : (
+                <section className="mt-8">
+                  <h2 className="font-display text-2xl text-foreground">Shop catalog</h2>
+                  <ul className="mt-4 divide-y divide-border rounded-[24px] bg-card">
+                    {PRODUCT_CATALOG.map((product) => (
+                      <li key={product.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                        <span className="text-foreground">{product.name}</span>
+                        <span className="text-muted-foreground">{formatInr(product.unitPrice)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </div>
             {mode === 'pack' ? <CameraPackReader onRead={onRead} /> : <CameraQrReader onRead={onRead} />}
           </motion.div>
