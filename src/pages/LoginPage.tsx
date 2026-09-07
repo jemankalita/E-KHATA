@@ -5,17 +5,62 @@ import { LoginScanScene } from '@/components/LoginScanScene'
 import { TermsLink } from '@/components/TermsLink'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 import { useKhata } from '@/hooks/useKhata'
 import { useTheme } from '@/hooks/useTheme'
+import { dashboardPath } from '@/lib/auth'
 import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M21.6 12.23c0-.74-.07-1.45-.19-2.13H12v4.03h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.9-1.75 2.98-4.33 2.98-7.42Z"
+      />
+      <path
+        fill="currentColor"
+        d="M12 22c2.7 0 4.96-.9 6.62-2.35l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.58-4.12H3.08v2.58A10 10 0 0 0 12 22Z"
+      />
+      <path
+        fill="currentColor"
+        d="M6.42 13.99A6.01 6.01 0 0 1 6.1 12c0-.69.12-1.36.32-1.99V7.43H3.08A10 10 0 0 0 2 12c0 1.61.39 3.14 1.08 4.57l3.34-2.58Z"
+      />
+      <path
+        fill="currentColor"
+        d="M12 5.89c1.47 0 2.78.5 3.82 1.5l2.86-2.86C16.95 2.91 14.7 2 12 2A10 10 0 0 0 3.08 7.43l3.34 2.58C7.2 7.65 9.4 5.89 12 5.89Z"
+      />
+    </svg>
+  )
+}
 
 export function LoginPage() {
-  const { setRole, resetDemo } = useKhata()
+  const { resetDemo, setRole } = useKhata()
+  const { configured, loading, profile, signInWithGoogle } = useAuth()
   const { theme } = useTheme()
   const navigate = useNavigate()
   const activeSection = useActiveLoginSection()
   const light = theme === 'light'
+
+  useEffect(() => {
+    if (!loading && profile) navigate(dashboardPath(profile.role), { replace: true })
+  }, [loading, navigate, profile])
+
+  async function enterAs(role: 'customer' | 'shopkeeper') {
+    if (!configured) {
+      setRole(role)
+      navigate(dashboardPath(role))
+      return
+    }
+    try {
+      await signInWithGoogle(role)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Google sign-in failed.')
+    }
+  }
 
   return (
     <div className="relative min-h-svh bg-transparent text-white">
@@ -71,17 +116,21 @@ export function LoginPage() {
         </div>
 
         <div className="space-y-3">
+          {!configured ? (
+            <p className="rounded-[20px] bg-black/25 px-4 py-3 text-sm text-white/90">
+              Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then enable Google in Supabase Auth.
+            </p>
+          ) : null}
           <button
             type="button"
             aria-label="Continue as Customer"
             className="flex w-full items-end justify-between rounded-[28px] bg-primary p-6 text-left text-primary-foreground"
-            onClick={() => {
-              setRole('customer')
-              navigate('/customer')
-            }}
+            onClick={() => void enterAs('customer')}
           >
             <span>
-              <span className="block text-[13px] opacity-70">Continue as</span>
+              <span className="inline-flex items-center gap-2 text-[13px] opacity-70">
+                <GoogleMark /> Continue as
+              </span>
               <span className="mt-1 block font-display text-4xl">Customer</span>
             </span>
             <ArrowRight className="mb-1 size-5" />
@@ -90,13 +139,12 @@ export function LoginPage() {
             type="button"
             aria-label="Continue as Shopkeeper"
             className="flex w-full items-end justify-between rounded-[28px] bg-white p-6 text-left text-zinc-900 dark:bg-card dark:text-foreground"
-            onClick={() => {
-              setRole('shopkeeper')
-              navigate('/shopkeeper')
-            }}
+            onClick={() => void enterAs('shopkeeper')}
           >
             <span>
-              <span className="block text-[13px] text-zinc-500 dark:text-muted-foreground">Continue as</span>
+              <span className="inline-flex items-center gap-2 text-[13px] text-zinc-500 dark:text-muted-foreground">
+                <GoogleMark /> Continue as
+              </span>
               <span className="mt-1 block font-display text-4xl">Shopkeeper</span>
             </span>
             <ArrowRight className="mb-1 size-5" />

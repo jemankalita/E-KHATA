@@ -2,7 +2,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
 import { formatInr, greetingForHour } from '@/lib/utils'
-import { Users, Clock, Plus } from 'lucide-react'
+import { Users, Clock, Plus, Camera } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -25,9 +25,14 @@ export function ShopkeeperDashboardPage() {
         <Stat icon={<Clock className="size-4" />} label="Pending confirmations" value={String(state.merchant.pendingConfirmations)} />
       </section>
 
-      <Button size="lg" className="mt-6" onClick={() => navigate('/shopkeeper/create')}>
-        <Plus /> Create Transaction
-      </Button>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button size="lg" onClick={() => navigate('/shopkeeper/upload')}>
+          <Camera /> Scan bill
+        </Button>
+        <Button size="lg" variant="outline" onClick={() => navigate('/shopkeeper/create')}>
+          <Plus /> Enter items
+        </Button>
+      </div>
 
       <section className="mt-10">
         <h2 className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">

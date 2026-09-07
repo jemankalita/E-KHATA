@@ -8,20 +8,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { WalletCard } from '@/components/WalletCard'
-import { RFID_FARE } from '@/data/demo'
+import { useAutomaticRfid } from '@/hooks/useAutomaticRfid'
 import { useKhata } from '@/hooks/useKhata'
+import type { RfidTap } from '@/lib/rfid'
 import { formatInr } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import { ArrowRight, Nfc, QrCode, Radio } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Nfc, QrCode, Radio } from 'lucide-react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 export function CustomerDashboardPage() {
   const { state, addRfidFare } = useKhata()
   const navigate = useNavigate()
-  const [rfidOpen, setRfidOpen] = useState(false)
-  const [adding, setAdding] = useState(false)
+  const [recognized, setRecognized] = useState<RfidTap | null>(null)
+  const listenerRef = useRef<HTMLDivElement>(null)
 
   const recent = state.transactions.filter((tx) => !tx.settled).slice(0, 6)
   const openTxs = state.transactions.filter((tx) => !tx.settled)
@@ -36,27 +37,43 @@ export function CustomerDashboardPage() {
     return [...map.entries()].sort((a, b) => b[1] - a[1])
   }, [openTxs])
 
+  const onCard = useCallback(
+    (tap: RfidTap) => {
+      addRfidFare(tap)
+      setRecognized(tap)
+      toast.success('RFID recognized', {
+        description: `${tap.merchant} · ${formatInr(tap.amount)} added to your E-Khata.`,
+      })
+    },
+    [addRfidFare],
+  )
+
+  useAutomaticRfid(onCard)
+
   return (
     <div>
       <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <WalletCard outstanding={state.wallet.outstanding} nextSettlement={state.wallet.nextSettlement} />
         <div className="grid gap-3 sm:grid-cols-2">
           <MiniCard label="QR khata" value={formatInr(qrTotal)} delta="Verified" />
-          <MiniCard label="RFID" value={formatInr(rfidTotal)} delta="Prototype" />
-          <button
-            type="button"
-            data-testid="simulate-rfid"
-            onClick={() => setRfidOpen(true)}
-            className="flex items-center justify-between rounded-[24px] bg-accent px-5 py-4 text-left text-accent-foreground sm:col-span-2"
+          <MiniCard label="RFID" value={formatInr(rfidTotal)} delta="Auto listen" />
+          <div
+            ref={listenerRef}
+            tabIndex={-1}
+            data-testid="rfid-listener"
+            className="flex items-center justify-between rounded-[24px] bg-accent px-5 py-4 text-left text-accent-foreground outline-none sm:col-span-2"
           >
             <span>
-              <span className="block text-[11px] opacity-70">RFID integration · Prototype</span>
-              <span className="text-[16px] font-medium">Simulate a bus tap</span>
+              <span className="block text-[11px] opacity-70">Automatic RFID recognition</span>
+              <span className="text-[16px] font-medium">Listening for RFID</span>
+              <span className="mt-1 block text-[12px] opacity-80">
+                Hold a card to the reader, or use a USB RFID wedge. Known demo UID: EKRFID21G
+              </span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-3 py-1.5 text-[12px] font-medium">
-              Find out <ArrowRight className="size-3.5" />
+              <Nfc className="size-3.5" /> Live
             </span>
-          </button>
+          </div>
           <Button className="sm:col-span-2" onClick={() => navigate('/customer/scan')}>
             <QrCode /> Scan a shop QR
           </Button>
@@ -102,7 +119,14 @@ export function CustomerDashboardPage() {
                   <span className="text-muted-foreground">{merchant}</span>
                   <span>{formatInr(amount)}</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-foreground/10">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-foreground/10"
+                  role="progressbar"
+                  aria-label={`${merchant} share of outstanding`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={pct}
+                >
                   <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                 </div>
               </div>
@@ -111,41 +135,34 @@ export function CustomerDashboardPage() {
         </div>
       </section>
 
-      <Dialog open={rfidOpen} onOpenChange={setRfidOpen}>
-        <DialogContent>
+      <Dialog open={recognized !== null} onOpenChange={(open) => !open && setRecognized(null)}>
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            listenerRef.current?.focus()
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-accent">
-              <Radio className="size-5" /> RFID detected
+              <Radio className="size-5" /> RFID recognized
             </DialogTitle>
-            <DialogDescription>RFID Integration · Prototype</DialogDescription>
+            <DialogDescription>Card matched automatically. Fare posted to your khata.</DialogDescription>
           </DialogHeader>
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 space-y-3 rounded-[20px] bg-background p-4"
-          >
-            <p className="font-display text-3xl text-foreground">Bus Route 21G</p>
-            <Row label="Fare" value={formatInr(RFID_FARE)} />
-            <Row label="Source" value="RFID" />
-            <Row label="Status" value="Verified" />
-          </motion.div>
-          <Button
-            className="mt-5 w-full"
-            data-testid="add-rfid"
-            disabled={adding}
-            onClick={() => {
-              setAdding(true)
-              addRfidFare()
-              toast.success('Transaction added', {
-                description: `${formatInr(RFID_FARE)} added to your E-Khata.`,
-              })
-              setTimeout(() => {
-                setAdding(false)
-                setRfidOpen(false)
-              }, 500)
-            }}
-          >
-            <Nfc /> Add to E-Khata
+          {recognized ? (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 space-y-3 rounded-[20px] bg-background p-4"
+            >
+              <p className="font-display text-3xl text-foreground">{recognized.merchant}</p>
+              <Row label="Fare" value={formatInr(recognized.amount)} />
+              <Row label="Card" value={recognized.uid} />
+              <Row label="Source" value="RFID" />
+              <Row label="Status" value="Verified" />
+            </motion.div>
+          ) : null}
+          <Button className="mt-5 w-full" onClick={() => setRecognized(null)}>
+            Got it
           </Button>
         </DialogContent>
       </Dialog>

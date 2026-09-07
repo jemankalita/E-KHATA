@@ -1,9 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { playConfirmation } from './voice'
+import { confirmationLine, playConfirmation } from './voice'
 
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+describe('confirmationLine', () => {
+  it('speaks Hinglish with the exact rupee amount for any bill, not only demo totals', () => {
+    expect(confirmationLine(25)).toBe('25 rupees E-Khata mein add ho gaye.')
+    expect(confirmationLine(105)).toBe('105 rupees E-Khata mein add ho gaye.')
+    expect(confirmationLine(2499.5)).toBe('2499.50 rupees E-Khata mein add ho gaye.')
+    expect(confirmationLine(7)).not.toContain('₹')
+  })
 })
 
 describe('playConfirmation', () => {
@@ -26,10 +35,13 @@ describe('playConfirmation', () => {
     vi.stubGlobal('Audio', FakeAudio)
     vi.stubGlobal('URL', { createObjectURL: () => 'blob:voice' })
 
-    await expect(playConfirmation(120, false)).resolves.toBe('elevenlabs')
+    await expect(playConfirmation(2499.5, false)).resolves.toBe('elevenlabs')
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/voice',
-      expect.objectContaining({ method: 'POST' }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ text: confirmationLine(2499.5) }),
+      }),
     )
     expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('elevenlabs.io'))).toBe(true)
   })

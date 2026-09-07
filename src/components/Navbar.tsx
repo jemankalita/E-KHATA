@@ -1,21 +1,25 @@
 import { BrandWordmark } from '@/components/BrandLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { useAuth } from '@/hooks/useAuth'
 import { useKhata } from '@/hooks/useKhata'
 import { cn } from '@/lib/utils'
 import { QrCode, Sparkles } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 export function SiteHeader() {
   const { role, state } = useKhata()
+  const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
   const path = useLocation().pathname
   const isShop = role === 'shopkeeper'
-  const name = isShop ? state.merchant.name : state.customer.name
+  const name = profile?.displayName || (isShop ? state.merchant.name : state.customer.name)
   const initial = name.slice(0, 1)
   const home = isShop ? '/shopkeeper' : '/customer'
 
   const links = isShop
     ? [
         { to: '/shopkeeper', label: 'Home' },
+        { to: '/shopkeeper/upload', label: 'Scan bill' },
         { to: '/shopkeeper/create', label: 'Create' },
         { to: '/shopkeeper/qr', label: 'QR' },
       ]
@@ -27,7 +31,7 @@ export function SiteHeader() {
       ]
 
   const primary = isShop
-    ? { to: '/shopkeeper/create', label: 'New bill' }
+    ? { to: '/shopkeeper/upload', label: 'Scan bill' }
     : { to: '/customer/scan', label: 'Scan QR' }
 
   return (
@@ -63,9 +67,15 @@ export function SiteHeader() {
           <div className="grid size-9 place-items-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
             {initial}
           </div>
-          <Link to="/login" className="rounded-full bg-card px-4 py-2 text-[13px] text-foreground shadow-sm">
-            Switch
-          </Link>
+          <button
+            type="button"
+            className="rounded-full bg-card px-4 py-2 text-[13px] text-foreground shadow-sm"
+            onClick={() => {
+              void signOut().then(() => navigate('/login', { replace: true }))
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </div>
       <nav className="flex gap-4 overflow-x-auto border-t border-border px-6 py-2 md:hidden">

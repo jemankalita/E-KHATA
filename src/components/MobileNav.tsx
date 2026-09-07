@@ -21,7 +21,7 @@ export function MobileTopBar() {
         type="button"
         onClick={toggleMute}
         aria-pressed={muted}
-        aria-label={muted ? 'Unmute Hindi voice confirmation' : 'Mute Hindi voice confirmation'}
+        aria-label={muted ? 'Unmute Hinglish voice confirmation' : 'Mute Hinglish voice confirmation'}
         className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-[8px] text-ash hover:bg-graphite"
       >
         {muted ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}

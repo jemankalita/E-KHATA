@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
+import { AuthProvider } from '@/hooks/useAuth.tsx'
 import { KhataProvider } from '@/hooks/useKhata.tsx'
 import { ThemeProvider } from '@/hooks/useTheme.tsx'
 import { ClickRipple } from '@/components/ClickRipple'
@@ -12,11 +13,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <KhataProvider>
-          <App />
-          <ClickRipple />
-          <Toaster />
-        </KhataProvider>
+        <AuthProvider>
+          <KhataProvider>
+            <App />
+            <ClickRipple />
+            <Toaster />
+          </KhataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,

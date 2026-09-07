@@ -6,6 +6,8 @@ import {
 } from '@/data/demo'
 import { applyPendingQr } from '@/lib/applyPendingQr'
 import { publishLiveQr } from '@/lib/liveQr'
+import { recognizeBill, type BillRecognition } from '@/lib/ocr'
+import type { RfidTap } from '@/lib/rfid'
 import { formatSequenceId } from '@/lib/utils'
 import type {
   KhataState,
@@ -15,6 +17,9 @@ import type {
   TransactionItem,
 } from '@/types'
 import { playConfirmation } from '@/lib/voice'
+import { useAuth } from '@/hooks/useAuth'
+import { loadKhataState, saveKhataState, seedKhataState } from '@/lib/khataRemote'
+import { getSupabase } from '@/lib/supabaseClient'
 import {
   createContext,
   useCallback,
@@ -60,7 +65,7 @@ interface KhataContextValue {
   resetDemo: () => void
   prepareScanPayload: () => PendingQr
   confirmPendingQr: (draft?: PendingQr) => Transaction | null
-  addRfidFare: () => Transaction | null
+  addRfidFare: (tap?: RfidTap) => Transaction | null
   createMerchantQr: (input: {
     customerName: string
     items: TransactionItem[]
@@ -71,11 +76,16 @@ interface KhataContextValue {
   applyScannedQr: (pending: PendingQr) => Transaction | null
   settleStore: (merchant: string) => void
   settleKhata: () => void
+  ocrDraft: BillRecognition | null
+  ocrBusy: boolean
+  runOcr: (imageUrl: string) => Promise<BillRecognition>
+  setOcrDraft: (draft: BillRecognition | null) => void
 }
 
 const KhataContext = createContext<KhataContextValue | null>(null)
 
 export function KhataProvider({ children }: { children: ReactNode }) {
+  const { profile, loading: authLoading } = useAuth()
   const [role, setRole] = useState<Role | null>(() => {
     const path = window.location.pathname
     if (path.startsWith('/customer')) return 'customer'
@@ -83,20 +93,62 @@ export function KhataProvider({ children }: { children: ReactNode }) {
     return null
   })
   const [state, setState] = useState<KhataState>(() => loadState())
+  const [ocrDraft, setOcrDraft] = useState<BillRecognition | null>(null)
+  const [ocrBusy, setOcrBusy] = useState(false)
+
+  useEffect(() => {
+    if (profile) setRole(profile.role)
+  }, [profile])
+
+  const persistRemote = useCallback(
+    (next: KhataState) => {
+      const client = getSupabase()
+      if (client && profile) void saveKhataState(client as never, profile.id, next)
+    },
+    [profile],
+  )
 
   const commit = useCallback((updater: (prev: KhataState) => KhataState) => {
     setState((prev) => {
       const next = updater(prev)
       persist(next)
+      persistRemote(next)
       return next
     })
-  }, [])
+  }, [persistRemote])
 
   const resetDemo = useCallback(() => {
-    const fresh = structuredClone(INITIAL_STATE)
+    const fresh = profile ? seedKhataState(profile) : structuredClone(INITIAL_STATE)
     persist(fresh)
+    persistRemote(fresh)
     setState(fresh)
-  }, [])
+  }, [persistRemote, profile])
+
+  useEffect(() => {
+    if (authLoading || !profile) return
+    const client = getSupabase()
+    if (!client) return
+    let cancelled = false
+    void loadKhataState(client as never, profile.id)
+      .then((remote) => {
+        if (cancelled) return
+        if (remote) {
+          persist(remote)
+          setState(remote)
+          return
+        }
+        const seeded = seedKhataState(profile)
+        persist(seeded)
+        setState(seeded)
+        void saveKhataState(client as never, profile.id, seeded)
+      })
+      .catch(() => {
+        // Keep the local snapshot if the remote read fails.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, profile])
 
   const prepareScanPayload = useCallback((): PendingQr => {
     let payload: PendingQr = buildDefaultPendingQr()
@@ -147,16 +199,19 @@ export function KhataProvider({ children }: { children: ReactNode }) {
     return created
   }, [commit, ingestConfirmed])
 
-  const addRfidFare = useCallback((): Transaction | null => {
+  const addRfidFare = useCallback((tap?: RfidTap): Transaction | null => {
     let created: Transaction | null = null
+    const amount = tap?.amount ?? RFID_FARE
+    const merchant = tap?.merchant ?? 'Bus Route 21G'
+    const category = tap?.category ?? 'RFID Transaction'
     commit((prev) => {
       const tx: Transaction = {
         id: formatSequenceId(prev.nextSequence),
-        merchant: 'Bus Route 21G',
+        merchant,
         customerName: prev.customer.name,
-        category: 'RFID Transaction',
-        amount: RFID_FARE,
-        items: [{ name: 'Fare', quantity: 1, price: RFID_FARE }],
+        category,
+        amount,
+        items: [{ name: 'Fare', quantity: 1, price: amount }],
         source: 'RFID',
         status: 'verified',
         timestamp: new Date().toISOString(),
@@ -170,7 +225,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
         nextSequence: prev.nextSequence + 1,
         wallet: {
           ...prev.wallet,
-          outstanding: prev.wallet.outstanding + RFID_FARE,
+          outstanding: prev.wallet.outstanding + amount,
         },
         transactions: [tx, ...prev.transactions],
       }
@@ -272,6 +327,17 @@ export function KhataProvider({ children }: { children: ReactNode }) {
     })
   }, [commit])
 
+  const runOcr = useCallback(async (imageUrl: string) => {
+    setOcrBusy(true)
+    try {
+      const recognition = await recognizeBill(imageUrl)
+      setOcrDraft(recognition)
+      return recognition
+    } finally {
+      setOcrBusy(false)
+    }
+  }, [])
+
   const settleKhata = useCallback(() => {
     commit((prev) => {
       const sharmaShare = prev.transactions
@@ -319,6 +385,10 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       applyScannedQr,
       settleStore,
       settleKhata,
+      ocrDraft,
+      ocrBusy,
+      runOcr,
+      setOcrDraft,
     }),
     [
       role,
@@ -333,6 +403,9 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       applyScannedQr,
       settleStore,
       settleKhata,
+      ocrDraft,
+      ocrBusy,
+      runOcr,
     ],
   )
 

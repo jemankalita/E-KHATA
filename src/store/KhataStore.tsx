@@ -85,7 +85,7 @@ function reducer(state: AppState, action: Action): AppState {
         billDraft: {
           ...state.billDraft,
           extractedItems,
-          totalAmount: extractedItems.reduce((sum, item) => sum + item.price, 0),
+          totalAmount: extractedItems.reduce((sum, item) => sum + item.quantity * item.price, 0),
           confidenceScore: overallConfidence(extractedItems),
           needsReview: extractedItems.some((item) => item.confidence < 0.8),
         },
@@ -212,7 +212,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       runOcr: async (imageUrl: string) => {
         dispatch({ type: 'set-ocr-busy', value: true })
         try {
-          dispatch({ type: 'set-bill', draft: await recognizeBill(imageUrl) })
+          dispatch({ type: 'set-bill', draft: (await recognizeBill(imageUrl)).draft })
         } catch (error) {
           dispatch({
             type: 'toast',

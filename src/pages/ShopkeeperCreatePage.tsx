@@ -11,11 +11,16 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 export function ShopkeeperCreatePage() {
-  const { createMerchantQr } = useKhata()
+  const { createMerchantQr, ocrDraft, setOcrDraft } = useKhata()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState(CUSTOMER_NAME)
-  const [items, setItems] = useState<TransactionItem[]>(DEMO_QR_ITEMS.map((item) => ({ ...item })))
+  const [items, setItems] = useState<TransactionItem[]>(() =>
+    ocrDraft && ocrDraft.items.length > 0
+      ? ocrDraft.items.map((item) => ({ ...item }))
+      : DEMO_QR_ITEMS.map((item) => ({ ...item })),
+  )
   const total = sumItems(items)
+  const fromPhoto = Boolean(ocrDraft && ocrDraft.items.length > 0)
 
   function updateItem(index: number, patch: Partial<TransactionItem>) {
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)))
@@ -27,7 +32,8 @@ export function ShopkeeperCreatePage() {
       toast.error('Add a customer and at least one item.')
       return
     }
-    createMerchantQr({ customerName, items: cleaned })
+    createMerchantQr({ customerName, items: cleaned, category: fromPhoto ? 'OCR bill' : 'Groceries' })
+    setOcrDraft(null)
     toast.success('E-Khata QR generated')
     navigate('/shopkeeper/qr')
   }
@@ -35,8 +41,15 @@ export function ShopkeeperCreatePage() {
   return (
     <div className="grid items-start gap-10 lg:grid-cols-[1.1fr_0.9fr]">
       <div>
-      <p className="text-[13px] text-accent">New entry</p>
-      <h1 className="mt-2 font-display text-5xl leading-[1.05] text-foreground">Create transaction</h1>
+      <p className="text-[13px] text-accent">{fromPhoto ? 'From bill photo' : 'New entry'}</p>
+      <h1 className="mt-2 font-display text-5xl leading-[1.05] text-foreground">
+        {fromPhoto ? 'Review items' : 'Create transaction'}
+      </h1>
+      {fromPhoto ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Check names, quantities, and unit prices before posting. OCR can misread faded print.
+        </p>
+      ) : null}
 
       <div className="mt-8">
         <Label htmlFor="customer">Customer name</Label>

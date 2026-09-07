@@ -1,7 +1,13 @@
 const LOCAL_AUDIO = ['/audio/confirm.mp3', '/audio/confirm.wav']
 
+export function spokenRupees(amount: number): string {
+  if (!Number.isFinite(amount)) return '0'
+  const rounded = Math.round(amount * 100) / 100
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
+}
+
 export function confirmationLine(amount: number): string {
-  return `₹${amount} E-Khata mein jod diya gaya.`
+  return `${spokenRupees(amount)} rupees E-Khata mein add ho gaye.`
 }
 
 async function playHtmlAudio(src: string): Promise<boolean> {

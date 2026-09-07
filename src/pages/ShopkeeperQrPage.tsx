@@ -36,8 +36,8 @@ export function ShopkeeperQrPage() {
     return (
       <div className="mx-auto max-w-lg px-5 py-16 text-center">
         <p className="text-muted-foreground">No live transaction. Create one first.</p>
-        <Button className="mt-6" onClick={() => navigate('/shopkeeper/create')}>
-          Create transaction
+        <Button className="mt-6" onClick={() => navigate('/shopkeeper/upload')}>
+          Scan a bill
         </Button>
       </div>
     )
