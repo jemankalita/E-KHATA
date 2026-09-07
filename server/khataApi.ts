@@ -4,7 +4,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { loadEnv, type Connect, type Plugin, type PreviewServer, type ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
 import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
-import { DEFAULT_INDIAN_MALE_HINGLISH_VOICE_ID, ELEVENLABS_TTS_MODEL } from '../src/lib/elevenLabsVoice.ts'
+import {
+  DEFAULT_SIA_VOICE_ID,
+  ELEVENLABS_OUTPUT_FORMAT,
+  ELEVENLABS_TTS_MODEL,
+  ELEVENLABS_VOICE_SETTINGS,
+} from '../src/lib/elevenLabsVoice.ts'
 import type { KhataSnapshot, PayIntent } from '../src/lib/payLink.ts'
 import type { Item, PaymentMode } from '../src/legacy/types.ts'
 
@@ -21,7 +26,7 @@ function elevenLabsConfig() {
   const fileEnv = loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', process.cwd(), '')
   cachedEleven = {
     key: process.env.ELEVENLABS_API_KEY || fileEnv.ELEVENLABS_API_KEY || '',
-    voiceId: process.env.ELEVENLABS_VOICE_ID || fileEnv.ELEVENLABS_VOICE_ID || DEFAULT_INDIAN_MALE_HINGLISH_VOICE_ID,
+    voiceId: process.env.ELEVENLABS_VOICE_ID || fileEnv.ELEVENLABS_VOICE_ID || DEFAULT_SIA_VOICE_ID,
   }
   return cachedEleven
 }
@@ -236,19 +241,22 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
       return
     }
     try {
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': key,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${ELEVENLABS_OUTPUT_FORMAT}`,
+        {
+          method: 'POST',
+          headers: {
+            'xi-api-key': key,
+            'Content-Type': 'application/json',
+            Accept: 'audio/mpeg',
+          },
+          body: JSON.stringify({
+            text,
+            model_id: ELEVENLABS_TTS_MODEL,
+            voice_settings: ELEVENLABS_VOICE_SETTINGS,
+          }),
         },
-        body: JSON.stringify({
-          text,
-          model_id: ELEVENLABS_TTS_MODEL,
-          voice_settings: { stability: 0.45, similarity_boost: 0.8 },
-        }),
-      })
+      )
       if (!response.ok) {
         console.error('ElevenLabs TTS failed', response.status)
         json(res, 502, { error: 'ElevenLabs could not speak this line.' })

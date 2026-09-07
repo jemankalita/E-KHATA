@@ -22,7 +22,7 @@ Open the [live demo](https://ekhata-gamma.vercel.app/) and use **Continue as sho
 
 | Role | What to do |
 | --- | --- |
-| Shopkeeper | Open **Scan bill**, photograph a printed receipt, review the extracted lines, then post to the customer’s khata. Hear the **ElevenLabs** Indian-male Hinglish confirmation for that amount (when the API key is configured). |
+| Shopkeeper | Open **Scan bill**, photograph or upload a receipt, review the extracted lines, then post to the customer’s khata. Sample bills: [`samples/ocr-bills/`](samples/ocr-bills/print.html) (print HTML or the PNG files). Hear the **ElevenLabs** Sia (Warm & Real Companion) confirmation for that amount (when the API key is configured). |
 | Customer | Open **My khata** and **Settlement**. There is **no Scan QR** path — the customer never scans. Balance and due date update from the same account. |
 | Settlement | Due date is **30 September 2026**. When that date passes, the khata **auto-settles**. There is no shopkeeper Settle button. |
 | RFID prototype | Customer home **listens automatically**. Hold an NFC card (Web NFC) or scan a USB RFID wedge UID — a known card posts the fare with no confirm tap. Demo UID: `EKRFID21G`. |
@@ -34,7 +34,7 @@ Open the [live demo](https://ekhata-gamma.vercel.app/) and use **Continue as sho
 - **Account-based, not identity-based.** The session is a khata. No customer ID or phone lookup.
 - **Shopkeeper generates QR; customer does not scan.** Posting is **Add to account** on the shop side.
 - **Settlement is automatic** on the due date. No manual close.
-- **ElevenLabs** speaks an Indian-male Hinglish confirmation for **any** posted amount (`POST /api/voice` → ElevenLabs TTS). If the key is missing, the UI still posts the bill and falls back to a local chime / speech synthesis.
+- **ElevenLabs** speaks a Sia (Warm & Real Companion) confirmation for **any** posted amount (`POST /api/voice` → ElevenLabs TTS). If the key is missing, the UI still posts the bill and falls back to a local chime / speech synthesis.
 
 ---
 
@@ -44,7 +44,7 @@ Open the [live demo](https://ekhata-gamma.vercel.app/) and use **Continue as sho
 - Live ledger with running balance and due date
 - Shopkeeper **bill photo OCR** (Tesseract) → review items → post to account
 - Shopkeeper QR + **Add to account** (no customer scan)
-- **ElevenLabs** voice confirmation (Indian male, Hinglish) via a server proxy (avoids browser CORS)
+- **ElevenLabs** voice confirmation (Sia — Warm & Real Companion) via a server proxy (avoids browser CORS)
 - Automatic RFID recognition on the customer home (Web NFC + USB wedge, same khata)
 - Light / dark theme, terms, reset-demo
 - Manual item entry remains available when a photo cannot be read
@@ -98,7 +98,7 @@ ELEVENLABS_API_KEY=
 ELEVENLABS_VOICE_ID=
 ```
 
-The Vite API reads `ELEVENLABS_API_KEY` on the server and never exposes the key to the browser. Without a key, posting still works; voice falls back locally. The default voice is an Indian male Hinglish speaker and the spoken line includes the exact rupee amount.
+The Vite API reads `ELEVENLABS_API_KEY` on the server and never exposes the key to the browser. Without a key, posting still works; voice falls back locally. The default voice is **Sia — Warm & Real Companion** (Eleven Multilingual v2) with slower, more stable settings so it sounds less synthetic. The spoken line includes the exact rupee amount.
 
 ---
 

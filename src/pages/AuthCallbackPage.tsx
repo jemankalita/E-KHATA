@@ -1,4 +1,4 @@
-import { dashboardPath } from '@/lib/auth'
+import { dashboardPath, runOnceGoogleCallback } from '@/lib/auth'
 import { useAuth } from '@/hooks/useAuth'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -8,17 +8,14 @@ export function AuthCallbackPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    let cancelled = false
-    void finishGoogleSignIn()
+    void runOnceGoogleCallback(() => finishGoogleSignIn())
       .then((role) => {
-        if (!cancelled) navigate(dashboardPath(role), { replace: true })
+        navigate(dashboardPath(role), { replace: true })
       })
-      .catch(() => {
-        if (!cancelled) navigate('/login', { replace: true })
+      .catch((error: unknown) => {
+        const authError = error instanceof Error ? error.message : 'Google sign-in failed. Try again.'
+        navigate('/login', { replace: true, state: { authError } })
       })
-    return () => {
-      cancelled = true
-    }
   }, [finishGoogleSignIn, navigate])
 
   return (

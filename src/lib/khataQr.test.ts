@@ -59,6 +59,7 @@ describe('applyPendingQr', () => {
       status: 'verified',
     })
     expect(next.pendingQr?.status).toBe('confirmed')
+    expect(next.nextSequence).toBe(INITIAL_STATE.nextSequence + 1)
   })
 
   it('does not double-post the same transaction id', () => {

@@ -76,8 +76,82 @@ export function authCallbackUrl(origin: string) {
 export function googleOAuthOptions(origin: string) {
   return {
     redirectTo: authCallbackUrl(origin),
-    queryParams: { access_type: 'offline', prompt: 'consent' },
   }
+}
+
+function searchParamsFromHref(href: string): URLSearchParams {
+  const url = new URL(href)
+  const merged = new URLSearchParams(url.searchParams)
+  const hash = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash
+  if (hash.includes('=')) {
+    new URLSearchParams(hash).forEach((value, key) => {
+      if (!merged.has(key)) merged.set(key, value)
+    })
+  }
+  return merged
+}
+
+export function authCodeFromUrl(href: string): string | null {
+  try {
+    return searchParamsFromHref(href).get('code')
+  } catch {
+    return null
+  }
+}
+
+export function oauthErrorFromUrl(href: string): string | null {
+  try {
+    const params = searchParamsFromHref(href)
+    const error = params.get('error')
+    if (!error) return null
+    const description = params.get('error_description')
+    if (!description) return error.replaceAll('_', ' ')
+    return description.replaceAll('+', ' ')
+  } catch {
+    return null
+  }
+}
+
+let googleCallbackInFlight: Promise<unknown> | null = null
+
+export function resetGoogleCallbackInFlight() {
+  googleCallbackInFlight = null
+}
+
+export function runOnceGoogleCallback<T>(run: () => Promise<T>): Promise<T> {
+  if (!googleCallbackInFlight) {
+    googleCallbackInFlight = run()
+  }
+  return googleCallbackInFlight as Promise<T>
+}
+
+export async function resolveOAuthSession<TSession>(input: {
+  href: string
+  getSession: () => Promise<{ data: { session: TSession | null }; error: { message: string } | null }>
+  exchangeCodeForSession: (
+    code: string,
+  ) => Promise<{ data: { session: TSession | null }; error: { message: string } | null }>
+}): Promise<TSession> {
+  const oauthError = oauthErrorFromUrl(input.href)
+  if (oauthError) throw new Error(oauthError)
+
+  const existing = await input.getSession()
+  if (existing.error) throw new Error(existing.error.message)
+  if (existing.data.session) return existing.data.session
+
+  const code = authCodeFromUrl(input.href)
+  if (!code) {
+    throw new Error('Google sign-in did not return a session. Try Continue as Customer or Shopkeeper again.')
+  }
+
+  const exchanged = await input.exchangeCodeForSession(code)
+  if (exchanged.data.session) return exchanged.data.session
+
+  const afterExchange = await input.getSession()
+  if (afterExchange.data.session) return afterExchange.data.session
+
+  if (exchanged.error) throw new Error(exchanged.error.message)
+  throw new Error('Google sign-in did not return a session. Try Continue as Customer or Shopkeeper again.')
 }
 
 export function toProfile(row: ProfileRow): Profile {
@@ -154,6 +228,7 @@ export async function startGoogleSignIn(input: {
   if (!input.client) {
     throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
   }
+  resetGoogleCallbackInFlight()
   rememberIntendedRole(input.storage, input.role)
   const { error } = await input.client.auth.signInWithOAuth({
     provider: 'google',

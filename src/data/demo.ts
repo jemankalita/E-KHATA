@@ -19,7 +19,9 @@ export const DEMO_QR_ITEMS: TransactionItem[] = [
 
 export const DEMO_QR_AMOUNT = 386
 export const DEMO_QR_ID = 'EK-2026-000381'
-export const RFID_FARE = 25
+export const RFID_FARE = 20
+export const METRO_FARE = 50
+export const CANTEEN_FARE = 100
 export const STARTING_BALANCE = 1240
 export const MERCHANT_OUTSTANDING = 18420
 
@@ -63,8 +65,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     merchant: 'Bus Route 21G',
     customerName: CUSTOMER_NAME,
     category: 'RFID Transaction',
-    amount: 25,
-    items: [{ name: 'Fare', quantity: 1, price: 25 }],
+    amount: 20,
+    items: [{ name: 'Fare', quantity: 1, price: 20 }],
     source: 'RFID',
     status: 'verified',
     timestamp: '2026-09-06T10:05:00.000Z',

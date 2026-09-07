@@ -10,6 +10,7 @@ import {
 import { WalletCard } from '@/components/WalletCard'
 import { useAutomaticRfid } from '@/hooks/useAutomaticRfid'
 import { useKhata } from '@/hooks/useKhata'
+import { cumulativeSeries } from '@/lib/moneyGraph'
 import type { RfidTap } from '@/lib/rfid'
 import { formatInr } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -28,6 +29,23 @@ export function CustomerDashboardPage() {
   const openTxs = state.transactions.filter((tx) => !tx.settled)
   const qrTotal = openTxs.filter((tx) => tx.source === 'QR').reduce((s, tx) => s + tx.amount, 0)
   const rfidTotal = openTxs.filter((tx) => tx.source === 'RFID').reduce((s, tx) => s + tx.amount, 0)
+  const moneySeries = useMemo(() => {
+    const ordered = [...state.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+    return cumulativeSeries(
+      state.wallet.carriedForward,
+      ordered.map((tx) => tx.amount),
+    )
+  }, [state.transactions, state.wallet.carriedForward])
+  const chartLabels = useMemo(() => {
+    const ordered = [...state.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+    if (ordered.length === 0) return ['Open', 'Now']
+    return [
+      'Open',
+      ...ordered.map((tx) =>
+        new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(new Date(tx.timestamp)),
+      ),
+    ]
+  }, [state.transactions])
 
   const monthly = useMemo(() => {
     const map = new Map<string, number>()
@@ -52,8 +70,13 @@ export function CustomerDashboardPage() {
 
   return (
     <div>
-      <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-        <WalletCard outstanding={state.wallet.outstanding} nextSettlement={state.wallet.nextSettlement} />
+      <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <WalletCard
+          outstanding={state.wallet.outstanding}
+          nextSettlement={state.wallet.nextSettlement}
+          series={moneySeries}
+          labels={chartLabels}
+        />
         <div className="grid gap-3 sm:grid-cols-2">
           <MiniCard label="QR khata" value={formatInr(qrTotal)} delta="Verified" />
           <MiniCard label="RFID" value={formatInr(rfidTotal)} delta="Auto listen" />
@@ -67,7 +90,8 @@ export function CustomerDashboardPage() {
               <span className="block text-[11px] opacity-70">Automatic RFID recognition</span>
               <span className="text-[16px] font-medium">Listening for RFID</span>
               <span className="mt-1 block text-[12px] opacity-80">
-                Hold a card to the reader, or use a USB RFID wedge. Known demo UID: EKRFID21G
+                Hold a card or scan a barcode. Bus ₹20, metro ₹50, canteen ₹100. Demo UIDs: EKRFID21G,
+                EKRFIDMETRO, EKRFIDCANTEEN
               </span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-3 py-1.5 text-[12px] font-medium">
@@ -75,7 +99,10 @@ export function CustomerDashboardPage() {
             </span>
           </div>
           <Button className="sm:col-span-2" onClick={() => navigate('/customer/scan')}>
-            <QrCode /> Scan a shop QR
+            <QrCode /> Scan a pack
+          </Button>
+          <Button variant="secondary" className="sm:col-span-2" onClick={() => navigate('/customer/scan?mode=qr')}>
+            Scan a QR bill
           </Button>
           <Button variant="secondary" className="sm:col-span-2" onClick={() => navigate('/customer/ledger')}>
             Open my khata

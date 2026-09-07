@@ -1,28 +1,40 @@
 import { AnimatedNumber } from '@/components/AnimatedNumber'
+import { MoneyGraph } from '@/components/MoneyGraph'
 import { cn } from '@/lib/utils'
 
 export function WalletCard({
   outstanding,
   nextSettlement,
+  series,
+  labels,
   className,
 }: {
   outstanding: number
   nextSettlement: string
+  series: number[]
+  labels?: string[]
   className?: string
 }) {
   return (
-    <section className={cn('px-1', className)}>
-      <p className="text-[13px] text-muted-foreground">Outstanding balance · Next {nextSettlement}</p>
-      <AnimatedNumber
-        value={outstanding}
-        className="mt-2 block font-display text-[52px] leading-none tracking-tight text-foreground md:text-7xl"
+    <section className={cn('rounded-[28px] bg-card p-6 md:p-7', className)}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">Outstanding</p>
+          <AnimatedNumber
+            value={outstanding}
+            className="mt-2 block font-display text-4xl leading-none tracking-tight text-foreground tabular-nums md:text-5xl"
+          />
+        </div>
+        <p className="max-w-[12rem] text-right text-[13px] text-muted-foreground">
+          Due {nextSettlement}. This is the running khata, not a month-end estimate.
+        </p>
+      </div>
+      <MoneyGraph
+        values={series}
+        labels={labels}
+        label="Outstanding over recent entries"
+        className="mt-6 text-primary"
       />
-      <svg viewBox="0 0 320 72" className="mt-5 h-16 w-full max-w-xl" aria-hidden>
-        <path
-          className="spark"
-          d="M4 48 C 28 48, 36 22, 58 28 S 90 62, 112 40 S 150 8, 176 24 S 214 66, 244 38 S 286 18, 316 30"
-        />
-      </svg>
     </section>
   )
 }

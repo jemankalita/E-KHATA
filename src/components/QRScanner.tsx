@@ -20,7 +20,7 @@ export function QRScanner({
           <QRCodeSVG value={payload} size={188} level="M" bgColor="#ffffff" fgColor="#080B10" />
           {active ? (
             <motion.div
-              className="pointer-events-none absolute inset-x-2 h-0.5 bg-primary shadow-[0_0_18px_rgba(203,183,255,0.9)]"
+              className="pointer-events-none absolute inset-x-2 h-0.5 bg-primary shadow-[0_0_18px_rgba(216,203,184,0.75)]"
               initial={{ top: '12%' }}
               animate={{ top: ['12%', '86%', '12%'] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}

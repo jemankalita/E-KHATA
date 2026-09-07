@@ -29,12 +29,12 @@ function QrFace({ x, y }: { x: number; y: number }) {
 function RupeeNote() {
   return (
     <g>
-      <rect x="-20" y="-11" width="40" height="22" rx="4" fill="#6d52e8" />
+      <rect x="-20" y="-11" width="40" height="22" rx="4" fill="#c4a574" />
       <text
         x="0"
         y="5"
         textAnchor="middle"
-        fill="#f7f4ff"
+        fill="#1a1714"
         fontSize="12"
         fontFamily="Fraunces, Times New Roman, serif"
       >
@@ -51,21 +51,21 @@ export function LoginScanScene() {
     <figure
       role="img"
       aria-label={SCENE_LABEL}
-      className="relative mt-10 overflow-hidden rounded-[28px] bg-white/88 text-zinc-900 shadow-[0_18px_50px_rgba(8,40,90,0.18)] ring-1 ring-white/70 backdrop-blur-md dark:bg-white/10 dark:text-white dark:ring-white/15"
+      className="relative mt-10 aspect-[2/1] w-full overflow-hidden rounded-[28px] bg-white/88 text-zinc-900 shadow-[0_18px_50px_rgba(8,40,90,0.18)] ring-1 ring-white/70 backdrop-blur-md dark:bg-white/10 dark:text-white dark:ring-white/15"
     >
-      <svg viewBox="0 0 640 320" className="h-auto w-full" aria-hidden="true">
+      <svg viewBox="0 0 640 320" className="h-auto w-full min-h-[220px] lg:min-h-[300px]" aria-hidden="true">
         <defs>
           <linearGradient id="scene-wash" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#dff0ff" />
             <stop offset="100%" stopColor="#f7fbff" />
           </linearGradient>
           <linearGradient id="awning" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#6d52e8" />
-            <stop offset="100%" stopColor="#9b86f0" />
+            <stop offset="0%" stopColor="#2a241c" />
+            <stop offset="100%" stopColor="#5c5348" />
           </linearGradient>
           <linearGradient id="scan-beam" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0%" stopColor="#6d52e8" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#6d52e8" stopOpacity="0" />
+            <stop offset="0%" stopColor="#c4a574" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#c4a574" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -77,12 +77,12 @@ export function LoginScanScene() {
           <rect x="62" y="104" width="172" height="78" rx="4" fill="#cfe6f7" />
           <rect x="132" y="182" width="26" height="46" rx="3" fill="#c4b29a" />
           <path d="M40 86 L 256 86 L 242 114 L 54 114 Z" fill="url(#awning)" />
-          <rect x="86" y="58" width="124" height="26" rx="6" fill="#6d52e8" />
+          <rect x="86" y="58" width="124" height="26" rx="6" fill="#2a241c" />
           <text
             x="148"
             y="76"
             textAnchor="middle"
-            fill="#f7f4ff"
+            fill="#f6f1e7"
             fontSize="13"
             fontFamily="Fraunces, Times New Roman, serif"
           >
@@ -101,7 +101,7 @@ export function LoginScanScene() {
           width="48"
           height="3"
           rx="1.5"
-          fill="#6d52e8"
+          fill="#c4a574"
           animate={reduce ? { opacity: 0.7 } : { translateY: [0, 42, 0], opacity: [0.3, 1, 0.3] }}
           transition={reduce ? undefined : { ...FLOW, duration: motionTokens.duration.slow }}
         />
@@ -115,7 +115,7 @@ export function LoginScanScene() {
           <g transform="rotate(-18 410 206)">
             <rect x="394" y="182" width="28" height="48" rx="6" fill="#111827" />
             <rect x="398" y="187" width="20" height="34" rx="3" fill="#eef4ff" />
-            <rect x="401" y="192" width="14" height="8" rx="1" fill="#6d52e8" opacity="0.45" />
+            <rect x="401" y="192" width="14" height="8" rx="1" fill="#c4a574" opacity="0.7" />
           </g>
         </g>
 
@@ -126,7 +126,7 @@ export function LoginScanScene() {
           transition={reduce ? undefined : { ...FLOW, duration: motionTokens.duration.slow }}
         />
 
-        <path d={MONEY_PATH} fill="none" stroke="#6d52e8" strokeOpacity="0.28" strokeDasharray="3 7" />
+        <path d={MONEY_PATH} fill="none" stroke="#c4a574" strokeOpacity="0.4" strokeDasharray="3 7" />
 
         {[0, 0.33, 0.66].map((delay) => (
           <motion.g
@@ -141,7 +141,7 @@ export function LoginScanScene() {
 
         <g>
           <rect x="378" y="188" width="74" height="52" rx="10" fill="#ffffff" stroke="#d5deea" />
-          <rect x="388" y="198" width="34" height="5" rx="2" fill="#6d52e8" />
+          <rect x="388" y="198" width="34" height="5" rx="2" fill="#c4a574" />
           <rect x="388" y="208" width="26" height="3" rx="1.5" fill="#94a3b8" />
           <rect x="388" y="216" width="20" height="3" rx="1.5" fill="#94a3b8" />
           <text x="415" y="254" textAnchor="middle" fontSize="10" fill="#64748b">

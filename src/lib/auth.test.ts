@@ -7,6 +7,9 @@ import {
   googleOAuthOptions,
   parseRole,
   rememberIntendedRole,
+  resolveOAuthSession,
+  resetGoogleCallbackInFlight,
+  runOnceGoogleCallback,
   startGoogleSignIn,
 } from './auth'
 
@@ -57,8 +60,87 @@ describe('auth routing helpers', () => {
     expect(authCallbackUrl('http://localhost:5173')).toBe('http://localhost:5173/auth/callback')
     expect(googleOAuthOptions('http://localhost:5173')).toEqual({
       redirectTo: 'http://localhost:5173/auth/callback',
-      queryParams: { access_type: 'offline', prompt: 'consent' },
     })
+  })
+})
+
+describe('resolveOAuthSession', () => {
+  it('uses an existing session without exchanging a code', async () => {
+    const session = { user: { id: 'u1' } }
+    const exchangeCodeForSession = vi.fn()
+    const resolved = await resolveOAuthSession({
+      href: 'http://localhost:5173/auth/callback',
+      getSession: async () => ({ data: { session }, error: null }),
+      exchangeCodeForSession,
+    })
+    expect(resolved).toBe(session)
+    expect(exchangeCodeForSession).not.toHaveBeenCalled()
+  })
+
+  it('exchanges the PKCE code when the callback lands without a session yet', async () => {
+    const session = { user: { id: 'u2' } }
+    const resolved = await resolveOAuthSession({
+      href: 'http://localhost:5173/auth/callback?code=pkce-code',
+      getSession: async () => ({ data: { session: null }, error: null }),
+      exchangeCodeForSession: async (code) => {
+        expect(code).toBe('pkce-code')
+        return { data: { session }, error: null }
+      },
+    })
+    expect(resolved).toBe(session)
+  })
+
+  it('recovers when the PKCE code was already consumed by the client', async () => {
+    const session = { user: { id: 'u3' } }
+    let calls = 0
+    const resolved = await resolveOAuthSession({
+      href: 'http://localhost:5173/auth/callback?code=used',
+      getSession: async () => {
+        calls += 1
+        return { data: { session: calls > 1 ? session : null }, error: null }
+      },
+      exchangeCodeForSession: async () => ({
+        data: { session: null },
+        error: { message: 'invalid request: both auth code and code verifier should be non-empty' },
+      }),
+    })
+    expect(resolved).toBe(session)
+  })
+
+  it('fails clearly when Google returns neither a session nor a code', async () => {
+    await expect(
+      resolveOAuthSession({
+        href: 'http://localhost:5173/auth/callback',
+        getSession: async () => ({ data: { session: null }, error: null }),
+        exchangeCodeForSession: vi.fn(),
+      }),
+    ).rejects.toThrow(/did not return a session/i)
+  })
+
+  it('surfaces Google or Supabase errors from the callback URL', async () => {
+    await expect(
+      resolveOAuthSession({
+        href: 'http://localhost:5173/auth/callback?error=access_denied&error_description=User+cancelled',
+        getSession: async () => ({ data: { session: null }, error: null }),
+        exchangeCodeForSession: vi.fn(),
+      }),
+    ).rejects.toThrow(/User cancelled/)
+  })
+})
+
+describe('runOnceGoogleCallback', () => {
+  it('reuses the in-flight Google finish so React Strict Mode cannot spend the PKCE code twice', async () => {
+    resetGoogleCallbackInFlight()
+    let starts = 0
+    const run = () => {
+      starts += 1
+      return Promise.resolve('shopkeeper' as const)
+    }
+    const [first, second] = await Promise.all([runOnceGoogleCallback(run), runOnceGoogleCallback(run)])
+    expect(starts).toBe(1)
+    expect(first).toBe('shopkeeper')
+    expect(second).toBe('shopkeeper')
+    resetGoogleCallbackInFlight()
   })
 })
 
@@ -154,7 +236,6 @@ describe('startGoogleSignIn', () => {
       provider: 'google',
       options: {
         redirectTo: 'http://localhost:5173/auth/callback',
-        queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })
   })

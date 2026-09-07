@@ -35,7 +35,7 @@ export function CustomerLedgerPage() {
       <p className="mt-3 rounded-[20px] bg-primary/15 px-4 py-3 text-[14px] text-primary">
         Both parties share the same record before it hits your balance.{' '}
         <Link to="/customer/scan" className="underline underline-offset-4">
-          Scan a shop QR
+          Scan a pack or QR bill
         </Link>
         .
       </p>

@@ -50,13 +50,13 @@ function rand(min: number, max: number) {
 
 function createGrainTile() {
   const tile = document.createElement('canvas')
-  tile.width = 128
-  tile.height = 128
+  tile.width = 160
+  tile.height = 160
   const ctx = tile.getContext('2d')
   if (!ctx) return tile
-  const image = ctx.createImageData(128, 128)
+  const image = ctx.createImageData(160, 160)
   for (let i = 0; i < image.data.length; i += 4) {
-    const n = 90 + Math.random() * 140
+    const n = 48 + Math.random() * 180
     image.data[i] = n
     image.data[i + 1] = n
     image.data[i + 2] = n
@@ -255,8 +255,8 @@ function drawComets(ctx: CanvasRenderingContext2D, comets: Comet[], width: numbe
 
 function drawGrain(ctx: CanvasRenderingContext2D, tile: HTMLCanvasElement, width: number, height: number, theme: Theme) {
   ctx.save()
-  ctx.globalAlpha = theme === 'dark' ? 0.16 : 0.2
-  ctx.globalCompositeOperation = theme === 'dark' ? 'soft-light' : 'overlay'
+  ctx.globalAlpha = theme === 'dark' ? 0.38 : 0.2
+  ctx.globalCompositeOperation = 'overlay'
   const pattern = ctx.createPattern(tile, 'repeat')
   if (pattern) {
     ctx.fillStyle = pattern

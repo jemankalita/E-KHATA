@@ -44,7 +44,8 @@ describe('LoginPage', () => {
   it('offers two account paths without month-end settlement copy', () => {
     const { container } = renderLogin()
     const view = within(container)
-    expect(view.getByRole('heading', { name: /trust captured/i })).toBeInTheDocument()
+    expect(view.getByRole('heading', { name: /simplify your khata/i })).toBeInTheDocument()
+    expect(view.getByText(/the bill is posted once/i)).toBeInTheDocument()
     expect(view.getByRole('button', { name: /continue as\s*customer/i })).toBeInTheDocument()
     expect(view.getByRole('button', { name: /continue as\s*shopkeeper/i })).toBeInTheDocument()
     expect(view.queryByText(/month end/i)).not.toBeInTheDocument()
@@ -55,11 +56,17 @@ describe('LoginPage', () => {
     expect(within(container).getByRole('link', { name: /^e-khata$/i })).toHaveAttribute('href', '/login')
   })
 
-  it('shows a person scanning a shop QR with money flowing in', () => {
+  it('places the kirana scan scene in the hero and the phone lower on the page', () => {
     const { container } = renderLogin()
+    const kirana = within(container).getByRole('img', {
+      name: /person scanning a shop qr while money flows into e-khata/i,
+    })
+    const phone = within(container).getByRole('img', {
+      name: /e-khata on a phone: outstanding balance, khata graph, and open shop bills/i,
+    })
     expect(
-      within(container).getByRole('img', { name: /person scanning a shop qr while money flows into e-khata/i }),
-    ).toBeInTheDocument()
+      kirana.compareDocumentPosition(phone) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it('signs in with Google as the chosen role', async () => {

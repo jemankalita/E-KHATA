@@ -36,6 +36,12 @@ describe('CustomerDashboardPage RFID', () => {
     expect(screen.queryByRole('button', { name: /simulate a bus tap/i })).not.toBeInTheDocument()
   })
 
+  it('shows a money graph of outstanding entries', () => {
+    renderDashboard()
+    expect(screen.getByRole('img', { name: /outstanding over recent entries/i })).toBeInTheDocument()
+    expect(screen.getByText(/due 30 september 2026/i)).toBeInTheDocument()
+  })
+
   it('posts the fare when a known card is recognized', async () => {
     const user = userEvent.setup()
     renderDashboard()
@@ -44,7 +50,7 @@ describe('CustomerDashboardPage RFID', () => {
       expect.objectContaining({
         uid: DEMO_RFID_UID,
         merchant: 'Bus Route 21G',
-        amount: 25,
+        amount: 20,
       }),
     )
   })

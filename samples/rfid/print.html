@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>E-Khata sample RFID cards</title>
+    <style>
+      body {
+        margin: 0;
+        background: #e8e4dc;
+        color: #111;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      .guide {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 20px 8px;
+      }
+      .guide h1 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+      }
+      .guide p {
+        margin: 0 0 8px;
+        line-height: 1.45;
+        color: #333;
+      }
+      .cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+        justify-content: center;
+        padding: 16px 16px 48px;
+      }
+      .card {
+        width: 420px;
+        min-height: 240px;
+        padding: 28px 24px;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+        display: grid;
+        grid-template-columns: 1fr 140px;
+        gap: 12px;
+        align-items: center;
+      }
+      .card h2 {
+        margin: 0;
+        font-size: 2.4rem;
+        letter-spacing: 0.08em;
+      }
+      .card .uid {
+        margin: 8px 0 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+      .card .fare {
+        margin: 10px 0 0;
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+      .card img {
+        width: 140px;
+        height: 140px;
+        background: #fff;
+        padding: 8px;
+        border-radius: 8px;
+      }
+      .bus {
+        background: #f4f1ea;
+        color: #111;
+      }
+      .metro {
+        background: #d9e8f7;
+        color: #111;
+      }
+      .canteen {
+        background: #f3e6d4;
+        color: #111;
+      }
+      @media print {
+        .guide {
+          display: none;
+        }
+        body {
+          background: #fff;
+        }
+        .card {
+          page-break-after: always;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="guide">
+      <h1>Sample RFID cards</h1>
+      <p>
+        Print this page or open a PNG from this folder, then scan it on
+        <strong>Scan</strong> (Pack photo, QR bill, or USB RFID). The app posts
+        <strong>bus ₹20</strong>, <strong>metro ₹50</strong>, and <strong>canteen ₹100</strong>.
+      </p>
+      <p>QR payloads: <code>EKRFID21G</code>, <code>EKRFIDMETRO</code>, <code>EKRFIDCANTEEN</code>.</p>
+    </div>
+    <div class="cards">
+      <article class="card bus" aria-label="Bus RFID card">
+        <div>
+          <h2>BUS</h2>
+          <p class="uid">EKRFID21G</p>
+          <p class="fare">₹20</p>
+        </div>
+        <img src="01-bus-qr.png" alt="QR for EKRFID21G" />
+      </article>
+      <article class="card metro" aria-label="Metro RFID card">
+        <div>
+          <h2>METRO</h2>
+          <p class="uid">EKRFIDMETRO</p>
+          <p class="fare">₹50</p>
+        </div>
+        <img src="02-metro-qr.png" alt="QR for EKRFIDMETRO" />
+      </article>
+      <article class="card canteen" aria-label="Canteen RFID card">
+        <div>
+          <h2>CANTEEN</h2>
+          <p class="uid">EKRFIDCANTEEN</p>
+          <p class="fare">₹100</p>
+        </div>
+        <img src="03-canteen-qr.png" alt="QR for EKRFIDCANTEEN" />
+      </article>
+    </div>
+  </body>
+</html>

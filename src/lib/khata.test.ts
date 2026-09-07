@@ -74,6 +74,6 @@ describe('khata', () => {
     const customer = result.customers.find((entry) => entry.id === 'cust-aarav')
     expect(customer?.currentBalance).toBe(0)
     expect(result.transactions.every((tx) => tx.customerId !== 'cust-aarav' || tx.status === 'settled')).toBe(true)
-    expect(result.settledAmount).toBe(210)
+    expect(result.settledAmount).toBe(205)
   })
 })

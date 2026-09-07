@@ -2,6 +2,7 @@ import {
   consumeIntendedRole,
   ensureProfile,
   loadProfile,
+  resolveOAuthSession,
   startGoogleSignIn,
   type Profile,
 } from '@/lib/auth'
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (role: Role) => {
       await startGoogleSignIn({
         client,
-        storage: sessionStorage,
+        storage: localStorage,
         origin: window.location.origin,
         role,
       })
@@ -95,12 +96,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!client) {
       throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
     }
-    const { data, error } = await client.auth.getSession()
-    if (error) throw new Error(error.message)
-    const user = data.session?.user
-    if (!user) throw new Error('missing session')
-    const next = await ensureProfile(client as never, user, consumeIntendedRole(sessionStorage))
-    setSession(data.session)
+    const session = await resolveOAuthSession({
+      href: window.location.href,
+      getSession: () => client.auth.getSession(),
+      exchangeCodeForSession: (code) => client.auth.exchangeCodeForSession(code),
+    })
+    const user = session.user
+    if (!user) throw new Error('Google sign-in did not return a session. Try Continue as Customer or Shopkeeper again.')
+    const next = await ensureProfile(client as never, user, consumeIntendedRole(localStorage))
+    setSession(session)
     setProfile(next)
     return next.role
   }, [client])

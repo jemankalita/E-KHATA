@@ -48,6 +48,7 @@ export function applyPendingQr(prev: KhataState, pending: PendingQr): KhataState
         : prev.merchant.outstanding,
       pendingConfirmations: Math.max(0, prev.merchant.pendingConfirmations - 1),
     },
+    nextSequence: prev.nextSequence + 1,
     transactions: [tx, ...prev.transactions],
     pendingQr: { ...pending, status: 'confirmed' },
     shopkeeperRecent: [

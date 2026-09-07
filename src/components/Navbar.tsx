@@ -32,7 +32,7 @@ export function SiteHeader() {
 
   const primary = isShop
     ? { to: '/shopkeeper/upload', label: 'Scan bill' }
-    : { to: '/customer/scan', label: 'Scan QR' }
+    : { to: '/customer/scan', label: 'Scan' }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">

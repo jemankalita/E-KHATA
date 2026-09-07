@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>E-Khata sample bills for OCR</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        background: #e8e4dc;
+        color: #111;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      .guide {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 20px 8px;
+      }
+      .guide h1 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+      }
+      .guide p {
+        margin: 0 0 8px;
+        line-height: 1.45;
+        color: #333;
+      }
+      .bills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+        justify-content: center;
+        padding: 16px 16px 48px;
+      }
+      .receipt {
+        width: 340px;
+        background: #fff;
+        color: #000;
+        padding: 28px 22px 32px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+      }
+      .receipt pre {
+        margin: 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 17px;
+        line-height: 1.55;
+        letter-spacing: 0.01em;
+        white-space: pre;
+      }
+      @media print {
+        .guide {
+          display: none;
+        }
+        body {
+          background: #fff;
+        }
+        .bills {
+          display: block;
+          padding: 0;
+        }
+        .receipt {
+          box-shadow: none;
+          page-break-after: always;
+          width: 80mm;
+          margin: 0 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="guide">
+      <h1>Sample bills for Scan bill OCR</h1>
+      <p>
+        Print this page, or screenshot one receipt, then upload it on
+        <strong>Scan bill</strong>. Text is high-contrast monospace so Tesseract can read it.
+        Line formats match the parser: <code>Item x2 Rs 28</code>,
+        <code>2 x Item Rs 28</code>, and <code>Item Rs 10</code>.
+      </p>
+      <p>Use <strong>Print → Save as PDF</strong> if you do not have a printer, then photograph the PDF on screen.</p>
+    </div>
+    <div class="bills">
+      <article class="receipt" aria-label="Sharma Stores bill">
+        <pre>
+SHARMA STORES
+GSTIN 27AABCS1234F1Z5
+Date 07 Sep 2026
+
+Maggi Noodles     x2     Rs 28
+Parle G           x1     Rs 10
+Amul Milk 500ml   x1     Rs 32
+Lays Chips        x1     Rs 20
+
+TOTAL                    Rs 90
+        </pre>
+      </article>
+      <article class="receipt" aria-label="Kalita Kirana bill">
+        <pre>
+KALITA KIRANA
+GSTIN 18AABCK9876G1Z2
+Date 07 Sep 2026
+
+Tata Salt         x1     Rs 28
+Aashirvaad Atta   x1     Rs 52
+Britannia Bread   x1     Rs 40
+Bisleri           x2     Rs 40
+
+TOTAL                   Rs 160
+        </pre>
+      </article>
+      <article class="receipt" aria-label="Campus Canteen bill">
+        <pre>
+CAMPUS CANTEEN
+Shop counter B
+Date 07 Sep 2026
+
+2 x Maggi Rs 28
+1 x Parle G Rs 10
+1 x Lays Chips Rs 20
+1 x Bisleri Rs 20
+
+TOTAL Rs 78
+        </pre>
+      </article>
+      <article class="receipt" aria-label="Green Mart bill">
+        <pre>
+GREEN MART
+Invoice 1042
+Date 07 Sep 2026
+
+Lifebuoy Soap Rs 35
+Surf Excel Rs 78
+Fortune Oil Rs 145
+Sona Masoori Rice Rs 68
+
+TOTAL Rs 326
+        </pre>
+      </article>
+    </div>
+  </body>
+</html>

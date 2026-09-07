@@ -6,6 +6,7 @@ import { AuthProvider } from '@/hooks/useAuth.tsx'
 import { KhataProvider } from '@/hooks/useKhata.tsx'
 import { ThemeProvider } from '@/hooks/useTheme.tsx'
 import { ClickRipple } from '@/components/ClickRipple'
+import { DarkGrain } from '@/components/DarkGrain'
 import { Toaster } from './components/ui/sonner.tsx'
 import './index.css'
 
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <KhataProvider>
             <App />
+            <DarkGrain />
             <ClickRipple />
             <Toaster />
           </KhataProvider>

@@ -1,6 +1,8 @@
 import { render, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { resetGoogleCallbackInFlight } from '@/lib/auth'
 import { AuthCallbackPage } from './AuthCallbackPage'
 
 const navigate = vi.fn()
@@ -22,6 +24,7 @@ describe('AuthCallbackPage', () => {
   beforeEach(() => {
     navigate.mockReset()
     finishGoogleSignIn.mockReset()
+    resetGoogleCallbackInFlight()
   })
 
   it('sends a returning shopkeeper to the shop dashboard', async () => {
@@ -46,7 +49,36 @@ describe('AuthCallbackPage', () => {
     )
 
     await waitFor(() => {
-      expect(navigate).toHaveBeenCalledWith('/login', { replace: true })
+      expect(navigate).toHaveBeenCalledWith('/login', {
+        replace: true,
+        state: { authError: 'missing session' },
+      })
+    })
+  })
+
+  it('finishes Google sign-in once when React Strict Mode remounts the callback', async () => {
+    let settle: (role: 'customer') => void = () => undefined
+    finishGoogleSignIn.mockImplementation(
+      () =>
+        new Promise<'customer'>((resolve) => {
+          settle = resolve
+        }),
+    )
+
+    render(
+      <StrictMode>
+        <MemoryRouter>
+          <AuthCallbackPage />
+        </MemoryRouter>
+      </StrictMode>,
+    )
+
+    await waitFor(() => {
+      expect(finishGoogleSignIn).toHaveBeenCalledTimes(1)
+    })
+    settle('customer')
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith('/customer', { replace: true })
     })
   })
 })
