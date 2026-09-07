@@ -42,7 +42,6 @@ interface FileState extends KhataSnapshot {
 }
 
 const clients = new Set<ServerResponse>()
-const liveQrStore = new Map<string, Record<string, unknown>>()
 
 let state: FileState = loadState()
 
