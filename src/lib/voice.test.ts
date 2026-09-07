@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { confirmationLine, playConfirmation } from './voice'
+import { confirmationLine, playConfirmation, resetVoicePlaybackForTests, unlockVoicePlayback } from './voice'
 
 afterEach(() => {
+  resetVoicePlaybackForTests()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -52,4 +53,55 @@ describe('playConfirmation', () => {
     await expect(playConfirmation(40, true)).resolves.toBe('muted')
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('unlocks playback even when the browser play() call returns nothing', () => {
+    class SilentAudio {
+      src = ''
+      muted = false
+      play() {}
+    }
+    vi.stubGlobal('Audio', SilentAudio)
+    expect(() => unlockVoicePlayback()).not.toThrow()
+  })
+
+  it('unlocks the same audio element before ElevenLabs returns so a QR confirm can speak', async () => {
+    let releaseFetch: (value: Response) => void = () => undefined
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          releaseFetch = resolve
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const plays: string[] = []
+    class FakeAudio {
+      src = ''
+      muted = false
+      currentTime = 0
+      pause() {}
+      addEventListener(type: string, handler: () => void) {
+        if (type === 'playing') handler()
+      }
+      play() {
+        plays.push(this.src)
+        return Promise.resolve()
+      }
+    }
+    vi.stubGlobal('Audio', FakeAudio)
+    vi.stubGlobal('URL', { createObjectURL: () => 'blob:voice' })
+
+    const pending = playConfirmation(77, false)
+    await Promise.resolve()
+    expect(plays.length).toBeGreaterThan(0)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/voice',
+      expect.objectContaining({ method: 'POST' }),
+    )
+
+    releaseFetch(new Response(new Blob(['audio'], { type: 'audio/mpeg' }), { status: 200 }))
+    await expect(pending).resolves.toBe('elevenlabs')
+    expect(plays).toContain('blob:voice')
+  })
 })
+

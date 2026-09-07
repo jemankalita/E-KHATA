@@ -13,9 +13,10 @@ const pending: PendingQr = {
     { name: 'Bread', quantity: 1, price: 45 },
   ],
   amount: 77,
-  category: 'Groceries',
-  status: 'waiting',
-}
+    category: 'Groceries',
+    status: 'waiting',
+    payBy: '2026-09-14T18:00:00.000Z',
+  }
 
 describe('khata QR URLs', () => {
   it('encodes a phone-camera URL that round-trips the bill', () => {
@@ -58,7 +59,7 @@ describe('applyPendingQr', () => {
       amount: 77,
       status: 'verified',
     })
-    expect(next.pendingQr?.status).toBe('confirmed')
+    expect(next.transactions[0]?.payBy).toBe(pending.payBy)
     expect(next.nextSequence).toBe(INITIAL_STATE.nextSequence + 1)
   })
 

@@ -4,17 +4,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { loadEnv, type Connect, type Plugin, type PreviewServer, type ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
 import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
-import {
-  DEFAULT_SIA_VOICE_ID,
-  ELEVENLABS_OUTPUT_FORMAT,
-  ELEVENLABS_TTS_MODEL,
-  ELEVENLABS_VOICE_SETTINGS,
-} from '../src/lib/elevenLabsVoice.ts'
+import { DEFAULT_SIA_VOICE_ID } from '../src/lib/elevenLabsVoice.ts'
+import { normalizeVoiceText, requestElevenLabsAudio, VOICE_TEXT_MAX } from './elevenLabsSpeak.ts'
 import type { KhataSnapshot, PayIntent } from '../src/lib/payLink.ts'
 import type { Item, PaymentMode } from '../src/legacy/types.ts'
 
 const STATE_PATH = join(process.cwd(), '.data', 'khata-state.json')
-const VOICE_TEXT_MAX = 300
 const VOICE_RATE_WINDOW_MS = 60_000
 const VOICE_RATE_MAX = 20
 
@@ -230,7 +225,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
       return
     }
     const body = await readBody(req)
-    const text = String(body.text ?? '').trim().slice(0, VOICE_TEXT_MAX)
+    const text = normalizeVoiceText(body.text, VOICE_TEXT_MAX)
     const { key, voiceId } = elevenLabsConfig()
     if (!text) {
       json(res, 400, { error: 'Voice text is required.' })
@@ -240,36 +235,14 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
       json(res, 503, { error: 'ElevenLabs is not configured.' })
       return
     }
-    try {
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${ELEVENLABS_OUTPUT_FORMAT}`,
-        {
-          method: 'POST',
-          headers: {
-            'xi-api-key': key,
-            'Content-Type': 'application/json',
-            Accept: 'audio/mpeg',
-          },
-          body: JSON.stringify({
-            text,
-            model_id: ELEVENLABS_TTS_MODEL,
-            voice_settings: ELEVENLABS_VOICE_SETTINGS,
-          }),
-        },
-      )
-      if (!response.ok) {
-        console.error('ElevenLabs TTS failed', response.status)
-        json(res, 502, { error: 'ElevenLabs could not speak this line.' })
-        return
-      }
-      const audio = Buffer.from(await response.arrayBuffer())
-      res.statusCode = 200
-      res.setHeader('Content-Type', 'audio/mpeg')
-      res.end(audio)
-    } catch (error) {
-      console.error('ElevenLabs TTS request failed', error instanceof Error ? error.name : 'unknown')
+    const spoken = await requestElevenLabsAudio({ text, apiKey: key, voiceId })
+    if (!spoken.ok) {
       json(res, 502, { error: 'ElevenLabs could not speak this line.' })
+      return
     }
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.end(Buffer.from(spoken.audio))
     return
   }
 

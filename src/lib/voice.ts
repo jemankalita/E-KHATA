@@ -1,4 +1,9 @@
+import { apiUrl } from './api'
+
 const LOCAL_AUDIO = ['/audio/confirm.mp3', '/audio/confirm.wav']
+
+let sessionAudio: HTMLAudioElement | null = null
+let primed = false
 
 export function spokenRupees(amount: number): string {
   if (!Number.isFinite(amount)) return '0'
@@ -10,30 +15,47 @@ export function confirmationLine(amount: number): string {
   return `${spokenRupees(amount)} rupees E-Khata mein add ho gaye.`
 }
 
-async function playHtmlAudio(src: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const audio = new Audio(src)
-    const timer = window.setTimeout(() => resolve(false), 2500)
-    audio.addEventListener(
-      'playing',
-      () => {
-        window.clearTimeout(timer)
-        resolve(true)
-      },
-      { once: true },
-    )
-    audio.addEventListener(
-      'error',
-      () => {
-        window.clearTimeout(timer)
-        resolve(false)
-      },
-      { once: true },
-    )
-    void audio.play().catch(() => {
-      window.clearTimeout(timer)
-      resolve(false)
+export function resetVoicePlaybackForTests() {
+  sessionAudio = null
+  primed = false
+}
+
+function getSessionAudio(): HTMLAudioElement {
+  if (!sessionAudio) sessionAudio = new Audio()
+  return sessionAudio
+}
+
+/** Keep a single audio element unlocked across the ElevenLabs round-trip. */
+export function unlockVoicePlayback(): void {
+  if (typeof Audio === 'undefined') return
+  const audio = getSessionAudio()
+  if (!primed) {
+    audio.muted = true
+    audio.src = LOCAL_AUDIO[0]
+    primed = true
+  }
+  void Promise.resolve(audio.play())
+    .then(() => {
+      audio.muted = false
     })
+    .catch(() => {
+      audio.muted = false
+    })
+}
+
+async function playHtmlAudio(src: string): Promise<boolean> {
+  const audio = getSessionAudio()
+  audio.muted = false
+  audio.src = src
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(false), 2500)
+    const finish = (ok: boolean) => {
+      window.clearTimeout(timer)
+      resolve(ok)
+    }
+    audio.addEventListener('playing', () => finish(true), { once: true })
+    audio.addEventListener('error', () => finish(false), { once: true })
+    void Promise.resolve(audio.play()).catch(() => finish(false))
   })
 }
 
@@ -47,7 +69,7 @@ async function playLocalAudio(): Promise<boolean> {
 
 async function playElevenLabs(text: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/voice', {
+    const response = await fetch(apiUrl('/api/voice'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -76,6 +98,7 @@ export async function playConfirmation(
   muted: boolean,
 ): Promise<'local' | 'elevenlabs' | 'speech' | 'muted'> {
   if (muted) return 'muted'
+  unlockVoicePlayback()
   const text = confirmationLine(amount)
   const elevenOk = await playElevenLabs(text)
   if (elevenOk) return 'elevenlabs'

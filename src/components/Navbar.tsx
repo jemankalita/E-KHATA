@@ -19,24 +19,22 @@ export function SiteHeader() {
   const links = isShop
     ? [
         { to: '/shopkeeper', label: 'Home' },
-        { to: '/shopkeeper/upload', label: 'Scan bill' },
-        { to: '/shopkeeper/create', label: 'Create' },
+        { to: '/shopkeeper/create', label: 'New bill' },
         { to: '/shopkeeper/qr', label: 'QR' },
       ]
     : [
         { to: '/customer', label: 'Home' },
         { to: '/customer/scan', label: 'Scan' },
-        { to: '/customer/ledger', label: 'Ledger' },
-        { to: '/customer/settlement', label: 'Settle' },
+        { to: '/customer/settlement', label: 'Pay' },
       ]
 
   const primary = isShop
-    ? { to: '/shopkeeper/upload', label: 'Scan bill' }
-    : { to: '/customer/scan', label: 'Scan' }
+    ? { to: '/shopkeeper/create', label: 'New bill' }
+    : { to: '/customer/settlement', label: 'Pay' }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-8 px-6 py-2">
+      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-4 py-2 sm:gap-8 sm:px-6">
         <BrandWordmark showTagline />
         <nav className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
@@ -69,7 +67,7 @@ export function SiteHeader() {
           </div>
           <button
             type="button"
-            className="rounded-full bg-card px-4 py-2 text-[13px] text-foreground shadow-sm"
+            className="rounded-full bg-card px-3 py-2 text-[13px] text-foreground shadow-sm sm:px-4"
             onClick={() => {
               void signOut().then(() => navigate('/login', { replace: true }))
             }}
@@ -78,7 +76,7 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
-      <nav className="flex gap-4 overflow-x-auto border-t border-border px-6 py-2 md:hidden">
+      <nav className="flex gap-4 overflow-x-auto border-t border-border px-4 py-2 md:hidden sm:px-6">
         {links.map((link) => (
           <Link key={link.to} to={link.to} className="shrink-0 text-[12px] text-muted-foreground">
             {link.label}

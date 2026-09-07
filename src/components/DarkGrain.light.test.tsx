@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { DarkGrain } from './DarkGrain'
 
@@ -11,8 +12,21 @@ vi.mock('@/hooks/useTheme', () => ({
 }))
 
 describe('DarkGrain in light mode', () => {
-  it('does not render a grain overlay', () => {
-    render(<DarkGrain />)
+  it('renders a grain overlay on account pages', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <DarkGrain />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('dark-grain')).toBeInTheDocument()
+  })
+
+  it('hides grain on the QR scan camera', () => {
+    render(
+      <MemoryRouter initialEntries={['/customer/scan?mode=qr']}>
+        <DarkGrain />
+      </MemoryRouter>,
+    )
     expect(screen.queryByTestId('dark-grain')).not.toBeInTheDocument()
   })
 })

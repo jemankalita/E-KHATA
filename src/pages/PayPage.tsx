@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
 import { fetchLiveQr, publishLiveQr } from '@/lib/liveQr'
 import { parseKhataQrSearch } from '@/lib/khataQr'
+import { unlockVoicePlayback } from '@/lib/voice'
 import type { PendingQr } from '@/types'
 import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -101,6 +102,7 @@ function PayInner({
         </Button>
         <Button
           onClick={() => {
+            unlockVoicePlayback()
             const posted = applyScannedQr(draft)
             void publishLiveQr({ ...draft, status: 'confirmed' })
             if (posted) {

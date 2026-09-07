@@ -9,10 +9,11 @@ import {
 } from '@/components/ui/dialog'
 import { useKhata } from '@/hooks/useKhata'
 import { formatDateTime, formatInr } from '@/lib/utils'
+import { formatPayBy } from '@/lib/payBy'
 import type { Transaction } from '@/types'
 import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 export function CustomerLedgerPage() {
   const { state } = useKhata()
@@ -20,24 +21,20 @@ export function CustomerLedgerPage() {
   const requested = (location.state as { openId?: string } | null)?.openId
   const [openId, setOpenId] = useState<string | null>(requested ?? null)
 
-  const openTxs = state.transactions.filter((tx) => !tx.settled)
-  const settledTxs = state.transactions.filter((tx) => tx.settled)
+  const openTxs = state.transactions.filter((tx) => !tx.settled && tx.customerName === state.customer.name)
+  const settledTxs = state.transactions.filter((tx) => tx.settled && tx.customerName === state.customer.name)
   const selected = state.transactions.find((tx) => tx.id === openId) ?? null
 
   const groups = useMemo(() => groupByDay([...openTxs]), [openTxs])
 
   return (
     <div>
-      <p className="text-[13px] text-accent">Digital ledger</p>
-      <h1 className="mt-2 max-w-2xl font-display text-5xl leading-[1.05] text-foreground">
-        You have {openTxs.length} khata entries.
+      <p className="text-[13px] text-accent">Open bills</p>
+      <h1 className="mt-2 max-w-2xl font-display text-4xl leading-[1.05] text-foreground sm:text-5xl">
+        {openTxs.length === 0 ? 'Nothing left to pay.' : `${openTxs.length} bills to clear.`}
       </h1>
-      <p className="mt-3 rounded-[20px] bg-primary/15 px-4 py-3 text-[14px] text-primary">
-        Both parties share the same record before it hits your balance.{' '}
-        <Link to="/customer/scan" className="underline underline-offset-4">
-          Scan a pack or QR bill
-        </Link>
-        .
+      <p className="mt-3 text-sm text-muted-foreground">
+        Each bill has a pay-by date. Settle from Pay when you are ready.
       </p>
 
       <div className="relative mt-10">
@@ -71,6 +68,7 @@ export function CustomerLedgerPage() {
                         </div>
                         <p className="font-mono text-foreground">{formatInr(tx.amount)}</p>
                       </div>
+                      <p className="mt-1 text-[13px] text-muted-foreground">{formatPayBy(tx.payBy)}</p>
                       <div className="mt-2">
                         <StatusBadge status={tx.status} source={tx.source} />
                       </div>
@@ -111,6 +109,7 @@ function LedgerDetail({ transaction }: { transaction: Transaction }) {
           value={transaction.items.map((item) => `${item.name} × ${item.quantity}`).join(', ')}
         />
         <Detail label="Amount" value={formatInr(transaction.amount)} />
+        <Detail label="Pay by" value={formatPayBy(transaction.payBy)} />
         <Detail label="Timestamp" value={formatDateTime(transaction.timestamp)} />
         <Detail label="Transaction source" value={transaction.source} />
         <Detail label="Verification status" value={transaction.status === 'verified' ? 'Verified' : 'Pending'} />

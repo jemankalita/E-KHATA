@@ -1,3 +1,4 @@
+import { formatPayBy } from '@/lib/payBy'
 import { formatInr } from '@/lib/utils'
 import type { TransactionItem, TransactionVerification } from '@/types'
 import { Check } from 'lucide-react'
@@ -8,12 +9,14 @@ export function TransactionConfirmation({
   items,
   amount,
   transactionId,
+  payBy,
   verification,
 }: {
   merchant: string
   items: TransactionItem[]
   amount: number
   transactionId: string
+  payBy?: string
   verification?: TransactionVerification
 }) {
   return (
@@ -34,6 +37,12 @@ export function TransactionConfirmation({
             <span>Total</span>
             <span className="text-lg">{formatInr(amount)}</span>
           </li>
+          {payBy ? (
+            <li className="flex items-baseline justify-between text-foreground">
+              <span>Pay by</span>
+              <span>{formatPayBy(payBy)}</span>
+            </li>
+          ) : null}
         </ul>
       </div>
 

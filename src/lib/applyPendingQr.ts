@@ -1,4 +1,5 @@
 import type { KhataState, PendingQr, Transaction } from '@/types'
+import { payByFromPreset } from '@/lib/payBy'
 
 function verified() {
   return {
@@ -31,6 +32,7 @@ export function applyPendingQr(prev: KhataState, pending: PendingQr): KhataState
     timestamp: new Date().toISOString(),
     verification: verified(),
     settled: false,
+    payBy: pending.payBy || payByFromPreset('7d'),
   }
 
   const isHomeMerchant = pending.merchant === prev.merchant.name

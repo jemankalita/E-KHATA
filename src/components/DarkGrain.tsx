@@ -1,14 +1,19 @@
 import { useTheme } from '@/hooks/useTheme'
+import { grainVisibleOnPath } from '@/lib/grainVisibility'
+import { useLocation } from 'react-router-dom'
 
 export function DarkGrain() {
   const { theme } = useTheme()
-  if (theme !== 'dark') return null
+  const { pathname } = useLocation()
+  if (!grainVisibleOnPath(pathname)) return null
 
   return (
     <div
       data-testid="dark-grain"
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[60] mix-blend-overlay"
+      className={`pointer-events-none fixed inset-0 z-[60] ${
+        theme === 'light' ? 'mix-blend-multiply opacity-55' : 'mix-blend-overlay'
+      }`}
     >
       <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
         <filter

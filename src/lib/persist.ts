@@ -1,3 +1,4 @@
+import { apiUrl } from './api'
 import type { KhataSnapshot } from './payLink'
 import type { Customer, Item, PaymentMode, Transaction } from '../legacy/types'
 import { addToKhata, autoSettleDue, settleCustomer } from './khata'
@@ -29,7 +30,7 @@ export function writeLocalSnapshot(snapshot: KhataSnapshot) {
 
 export async function fetchSnapshot(): Promise<KhataSnapshot> {
   try {
-    const response = await fetch('/api/state')
+    const response = await fetch(apiUrl('/api/state'))
     if (!response.ok) throw new Error('state unavailable')
     const data = (await response.json()) as KhataSnapshot
     const settled = autoSettleDue(data.customers, data.transactions)
@@ -51,7 +52,7 @@ export async function createIntent(input: {
   items: Item[]
   paymentMode: PaymentMode
 }) {
-  const response = await fetch('/api/intent', {
+  const response = await fetch(apiUrl('/api/intent'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -67,7 +68,7 @@ export async function confirmIntent(referenceId: string): Promise<{
   transactions: Transaction[]
   transaction: Transaction
 }> {
-  const response = await fetch(`/api/intent/${encodeURIComponent(referenceId)}/confirm`, { method: 'POST' })
+  const response = await fetch(apiUrl(`/api/intent/${encodeURIComponent(referenceId)}/confirm`), { method: 'POST' })
   const data = (await response.json()) as {
     error?: string
     customers?: Customer[]
@@ -102,7 +103,7 @@ export async function confirmIntentLocal(
 }
 
 export async function settleRemote(customerId: string) {
-  const response = await fetch('/api/settle', {
+  const response = await fetch(apiUrl('/api/settle'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ customerId }),

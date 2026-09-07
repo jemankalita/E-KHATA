@@ -1,5 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { buildKhataQrUrl } from '@/lib/khataQr'
+import { formatPayBy } from '@/lib/payBy'
 import { formatInr } from '@/lib/utils'
 import type { PendingQr } from '@/types'
 
@@ -16,6 +17,9 @@ export function QRGenerator({ pending }: { pending: PendingQr }) {
       </p>
       <h2 className="mt-2 font-display text-3xl text-foreground">{pending.merchant}</h2>
       <p className="mt-1 text-2xl text-primary">{formatInr(pending.amount)}</p>
+      {pending.payBy ? (
+        <p className="mt-1 text-sm text-muted-foreground">{formatPayBy(pending.payBy)}</p>
+      ) : null}
       <div className="mx-auto mt-6 w-fit rounded-[18px] bg-white p-4">
         <QRCodeSVG value={payload} size={196} level="M" bgColor="#ffffff" fgColor="#080B10" />
       </div>

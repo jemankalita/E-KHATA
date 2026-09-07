@@ -27,6 +27,7 @@ export function buildKhataQrUrl(origin: string, pending: PendingQr): string {
   url.searchParams.set('cat', pending.category)
   url.searchParams.set('i', encodeItems(pending.items))
   url.searchParams.set('s', pending.status)
+  url.searchParams.set('due', pending.payBy)
   return url.toString()
 }
 
@@ -37,6 +38,7 @@ export function parseKhataQrSearch(search: URLSearchParams): PendingQr | null {
   const amount = Number(search.get('a') ?? search.get('amount'))
   const category = search.get('cat') ?? search.get('category') ?? 'Groceries'
   const items = decodeItems(search.get('i') ?? search.get('items'))
+  const payBy = search.get('due') ?? search.get('payBy') ?? ''
   if (!id || !merchant || !Number.isFinite(amount) || amount <= 0) return null
   return {
     id,
@@ -46,6 +48,7 @@ export function parseKhataQrSearch(search: URLSearchParams): PendingQr | null {
     amount,
     category,
     status: 'waiting',
+    payBy,
   }
 }
 
@@ -70,6 +73,7 @@ export function parseKhataQrValue(raw: string): PendingQr | null {
       amount?: number
       category?: string
       items?: TransactionItem[]
+      payBy?: string
     }
     if (!parsed.id || !parsed.merchant || !Number.isFinite(parsed.amount) || (parsed.amount ?? 0) <= 0) {
       return null
@@ -82,6 +86,7 @@ export function parseKhataQrValue(raw: string): PendingQr | null {
       amount: parsed.amount ?? 0,
       category: parsed.category ?? 'Groceries',
       status: 'waiting',
+      payBy: parsed.payBy ?? '',
     }
   } catch {
     return null

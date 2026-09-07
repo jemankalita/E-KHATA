@@ -56,6 +56,14 @@ describe('LoginPage', () => {
     expect(within(container).getByRole('link', { name: /^e-khata$/i })).toHaveAttribute('href', '/login')
   })
 
+  it('plays the night video behind the landing page in dark mode', () => {
+    const { container } = renderLogin()
+    const video = within(container).getByTestId('landing-video-backdrop').querySelector('video')
+    expect(video).toHaveAttribute('src', '/backgrounds/landing-night.mp4')
+    expect(video).toHaveProperty('muted', true)
+    expect(video).toHaveProperty('loop', true)
+  })
+
   it('places the kirana scan scene in the hero and the phone lower on the page', () => {
     const { container } = renderLogin()
     const kirana = within(container).getByRole('img', {

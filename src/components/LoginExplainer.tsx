@@ -133,7 +133,7 @@ export function LoginExplainer() {
   const path = sparkPath([...HERO_PHONE_LEDGER.series], 320, 96)
 
   return (
-    <div className="mx-auto max-w-6xl space-y-28 px-6 pb-28 pt-16 text-[#071428] dark:text-white">
+    <div className="relative z-10 mx-auto max-w-6xl space-y-28 px-6 pb-28 pt-16 text-[#071428] dark:text-white">
       <section id="how-it-works" className="scroll-mt-28 grid gap-10 lg:grid-cols-2 lg:items-end">
         <div>
           <p className="text-[12px] uppercase tracking-[0.18em] text-[#123056] dark:text-white/70">{stories[0].kicker}</p>

@@ -1,6 +1,7 @@
 import { PRODUCT_CATALOG } from '@/data/catalog'
 import { parseKhataQrValue } from '@/lib/khataQr'
 import { normalizeName } from '@/lib/matching'
+import { payByFromPreset } from '@/lib/payBy'
 import type { PendingQr } from '@/types'
 import type { Product } from '@/legacy/types'
 
@@ -57,5 +58,6 @@ export function resolveScannedCharge(raw: string, context: ScanChargeContext): P
     amount: product.unitPrice,
     category: 'Retail',
     status: 'waiting',
+    payBy: payByFromPreset('7d'),
   }
 }

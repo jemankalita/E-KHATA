@@ -30,6 +30,7 @@ export interface Transaction {
   timestamp: string
   verification: TransactionVerification
   settled: boolean
+  payBy: string
 }
 
 export interface Customer {
@@ -64,6 +65,17 @@ export interface PendingQr {
   amount: number
   category: string
   status: 'waiting' | 'scanned' | 'confirmed'
+  payBy: string
+}
+
+export interface SettlementNotice {
+  id: string
+  kind: 'settled' | 'auto'
+  customerName: string
+  merchant: string
+  amount: number
+  settledAt: string
+  seen: boolean
 }
 
 export interface ShopkeeperRecent {
@@ -81,5 +93,6 @@ export interface KhataState {
   transactions: Transaction[]
   pendingQr: PendingQr | null
   shopkeeperRecent: ShopkeeperRecent[]
+  notices: SettlementNotice[]
   nextSequence: number
 }

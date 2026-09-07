@@ -1,3 +1,4 @@
+import { apiUrl } from '@/lib/api'
 import type { PendingQr } from '@/types'
 
 const STORAGE_KEY = 'e-khata-live-qr-v1'
@@ -28,7 +29,7 @@ export function readLiveQrLocal(id: string): PendingQr | null {
 export async function publishLiveQr(pending: PendingQr): Promise<void> {
   writeLocal(pending)
   try {
-    await fetch(`/api/live-qr/${encodeURIComponent(pending.id)}`, {
+    await fetch(apiUrl(`/api/live-qr/${encodeURIComponent(pending.id)}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pending),
@@ -40,7 +41,7 @@ export async function publishLiveQr(pending: PendingQr): Promise<void> {
 
 export async function fetchLiveQr(id: string): Promise<PendingQr | null> {
   try {
-    const res = await fetch(`/api/live-qr/${encodeURIComponent(id)}`)
+    const res = await fetch(apiUrl(`/api/live-qr/${encodeURIComponent(id)}`))
     if (res.ok) return (await res.json()) as PendingQr
   } catch {
     /* fall through */

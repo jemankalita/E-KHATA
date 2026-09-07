@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CUSTOMER_NAME, DEMO_QR_ITEMS, sumItems } from '@/data/demo'
 import { useKhata } from '@/hooks/useKhata'
+import { PAY_BY_PRESETS, payByFromPreset, type PayByPreset } from '@/lib/payBy'
 import { formatInr } from '@/lib/utils'
 import type { TransactionItem } from '@/types'
 import { Plus, Trash2 } from 'lucide-react'
@@ -14,6 +15,7 @@ export function ShopkeeperCreatePage() {
   const { createMerchantQr, ocrDraft, setOcrDraft } = useKhata()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState(CUSTOMER_NAME)
+  const [payByPreset, setPayByPreset] = useState<PayByPreset>('7d')
   const [items, setItems] = useState<TransactionItem[]>(() =>
     ocrDraft && ocrDraft.items.length > 0
       ? ocrDraft.items.map((item) => ({ ...item }))
@@ -32,7 +34,12 @@ export function ShopkeeperCreatePage() {
       toast.error('Add a customer and at least one item.')
       return
     }
-    createMerchantQr({ customerName, items: cleaned, category: fromPhoto ? 'OCR bill' : 'Groceries' })
+    createMerchantQr({
+      customerName,
+      items: cleaned,
+      category: fromPhoto ? 'OCR bill' : 'Groceries',
+      payBy: payByFromPreset(payByPreset),
+    })
     setOcrDraft(null)
     toast.success('E-Khata QR generated')
     navigate('/shopkeeper/qr')
@@ -54,6 +61,26 @@ export function ShopkeeperCreatePage() {
       <div className="mt-8">
         <Label htmlFor="customer">Customer name</Label>
         <Input id="customer" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+      </div>
+
+      <div className="mt-6">
+        <Label>Pay by</Label>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {PAY_BY_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => setPayByPreset(preset.id)}
+              className={`rounded-full px-3 py-1.5 text-sm ${
+                payByPreset === preset.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mt-8 space-y-4">
@@ -109,7 +136,9 @@ export function ShopkeeperCreatePage() {
       <aside className="rounded-[28px] bg-card p-8">
         <p className="text-[13px] text-muted-foreground">Bill total</p>
         <p className="mt-3 font-display text-6xl text-foreground">{formatInr(total)}</p>
-        <p className="mt-4 text-sm text-muted-foreground">This amount is posted to the customer account. They do not scan the QR.</p>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Posted to {customerName || 'the customer'} · they must pay within {PAY_BY_PRESETS.find((p) => p.id === payByPreset)?.label.toLowerCase()}.
+        </p>
         <Button size="lg" className="mt-8 w-full" onClick={generate}>
           Generate E-Khata QR
         </Button>

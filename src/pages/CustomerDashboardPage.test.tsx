@@ -11,8 +11,10 @@ vi.mock('@/hooks/useKhata', () => ({
   useKhata: () => ({
     addRfidFare,
     state: {
+      customer: { name: 'Rahul Sharma' },
       wallet: { outstanding: 1240, nextSettlement: '30 September 2026', carriedForward: 0 },
       transactions: [],
+      notices: [],
     },
   }),
 }))
@@ -36,9 +38,10 @@ describe('CustomerDashboardPage RFID', () => {
     expect(screen.queryByRole('button', { name: /simulate a bus tap/i })).not.toBeInTheDocument()
   })
 
-  it('shows a money graph of outstanding entries', () => {
+  it('shows what to pay instead of a ledger chart', () => {
     renderDashboard()
-    expect(screen.getByRole('img', { name: /outstanding over recent entries/i })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /outstanding over recent entries/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /to pay/i })).toBeInTheDocument()
     expect(screen.getByText(/due 30 september 2026/i)).toBeInTheDocument()
   })
 

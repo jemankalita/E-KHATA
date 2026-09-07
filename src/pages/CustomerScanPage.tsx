@@ -9,6 +9,7 @@ import { parseKhataQrValue } from '@/lib/khataQr'
 import { recognizeRfid, type RfidTap } from '@/lib/rfid'
 import { resolveScannedCharge } from '@/lib/resolveScannedCharge'
 import { formatInr, formatSequenceId } from '@/lib/utils'
+import { unlockVoicePlayback } from '@/lib/voice'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import { useCallback, useState } from 'react'
@@ -94,17 +95,28 @@ export function CustomerScanPage() {
             className="grid items-start gap-12 lg:grid-cols-2"
           >
             <div>
-              <p className="text-[13px] text-accent">Scan a pack, QR bill, or RFID</p>
-              <h1 className="mt-2 font-display text-5xl leading-[1.05] text-foreground">Add to wallet</h1>
+              <p className="text-[13px] text-accent">Scan</p>
+              <h1 className="mt-2 font-display text-5xl leading-[1.05] text-foreground">Add a bill</h1>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-                Use Pack for Maggi, Amul milk, Lays, and the rest of the catalog. Use QR bill for a shop QR. RFID
-                still posts bus ₹20, metro ₹50, and canteen ₹100.
+                Scan a shop QR or a pack barcode. The amount goes on your khata with a pay-by date.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-2">
-                <Button variant={mode === 'pack' ? 'default' : 'secondary'} onClick={() => setMode('pack')}>
+                <Button
+                  variant={mode === 'pack' ? 'default' : 'secondary'}
+                  onClick={() => {
+                    unlockVoicePlayback()
+                    setMode('pack')
+                  }}
+                >
                   Pack
                 </Button>
-                <Button variant={mode === 'qr' ? 'default' : 'secondary'} onClick={() => setMode('qr')}>
+                <Button
+                  variant={mode === 'qr' ? 'default' : 'secondary'}
+                  onClick={() => {
+                    unlockVoicePlayback()
+                    setMode('qr')
+                  }}
+                >
                   QR bill
                 </Button>
               </div>

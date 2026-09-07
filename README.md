@@ -78,6 +78,7 @@ Once aging, reminders, and defaulters are in place, E-Khata will add:
 | Voice | **ElevenLabs** Text-to-Speech (`/api/voice` proxy) |
 | Data (optional) | Supabase schema + Realtime publication in `supabase/migrations/` |
 | Hosting | [Vercel](https://ekhata-gamma.vercel.app/) |
+| Android | Capacitor 8 WebView wrapper (`android/`) |
 
 ---
 
@@ -128,6 +129,51 @@ npm run dev
 npm test
 npm run build
 ```
+
+---
+
+## Android (Capacitor)
+
+The React + Vite app still runs in the browser. Capacitor wraps the same `dist/` build in an Android WebView.
+
+```bash
+npm install
+cp .env.example .env
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+Generate a debug APK from the repo root (requires the Android SDK and a JDK):
+
+```bash
+npm run android:apk
+```
+
+The APK is written to:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Equivalent Gradle command from `android/`:
+
+```bash
+gradlew.bat assembleDebug
+```
+
+On macOS/Linux use `./gradlew assembleDebug`.
+
+### Native notes
+
+- **App ID (placeholder):** `app.ekhata.placeholder`
+- **App name:** E-Khata
+- **Icons / splash:** Capacitor default resources until you replace files under `android/app/src/main/res/`
+- **APIs:** inside the APK, `/api/*` calls go to `https://ekhata-gamma.vercel.app` unless `VITE_API_BASE_URL` is set at build time
+- **Google OAuth:** add `https://localhost/auth/callback` to the Supabase redirect allow-list. Demo “Continue as customer/shopkeeper” still works without Google
+- **Camera:** Android CAMERA permission is declared for bill OCR and QR scan
+- **Web NFC:** Chrome WebView often does not expose `NDEFReader`; USB RFID wedge input still works
+- First Android project generation (if `android/` is missing): `npm run build && npx cap add android`
 
 ---
 

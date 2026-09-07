@@ -1,4 +1,4 @@
-import { AtmosphericBackdrop } from '@/components/AtmosphericBackdrop'
+import { LandingVideoBackdrop } from '@/components/LandingVideoBackdrop'
 import { BrandWordmark } from '@/components/BrandLogo'
 import { HeroPhone } from '@/components/HeroPhone'
 import { LoginExplainer, LoginSectionNav, useActiveLoginSection } from '@/components/LoginExplainer'
@@ -78,11 +78,11 @@ export function LoginPage() {
 
   return (
     <div className={`relative min-h-svh bg-transparent ${ink}`}>
-      <AtmosphericBackdrop />
+      <LandingVideoBackdrop />
 
       <header
         className={`sticky top-0 z-20 border-b backdrop-blur-md ${
-          light ? 'border-[#071428]/10 bg-white/90 text-[#071428]' : 'border-white/8 bg-black/35 text-white'
+          light ? 'border-[#071428]/10 bg-white/35 text-[#071428]' : 'border-white/8 bg-black/20 text-white'
         }`}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
@@ -121,7 +121,7 @@ export function LoginPage() {
         />
       </header>
 
-      <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:gap-16 lg:py-16">
+      <section className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-6 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:gap-16 lg:py-16">
         <div>
           <motion.div
             initial={intro.initial}
@@ -202,7 +202,7 @@ export function LoginPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-6 pt-28">
+      <section className="relative z-10 mx-auto max-w-6xl px-6 pb-6 pt-28">
         <p className={`text-[12px] uppercase tracking-[0.18em] ${mute}`}>On the counter</p>
         <h2 className={`mt-2 font-display text-3xl md:text-4xl ${ink}`}>The khata, as both sides read it</h2>
         <div className="mt-8 flex justify-center lg:justify-end">

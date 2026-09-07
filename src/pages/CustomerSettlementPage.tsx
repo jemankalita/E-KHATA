@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
+import { formatPayBy } from '@/lib/payBy'
 import { formatInr } from '@/lib/utils'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -9,18 +10,21 @@ export function CustomerSettlementPage() {
   const [busyStore, setBusyStore] = useState<string | null>(null)
 
   const stores = useMemo(() => {
-    const open = state.transactions.filter((tx) => !tx.settled)
-    const map = new Map<string, { merchant: string; amount: number; entries: number }>()
+    const open = state.transactions.filter((tx) => !tx.settled && tx.customerName === state.customer.name)
+    const map = new Map<string, { merchant: string; amount: number; entries: number; payBy: string }>()
     for (const tx of open) {
-      const current = map.get(tx.merchant) ?? { merchant: tx.merchant, amount: 0, entries: 0 }
+      const current = map.get(tx.merchant) ?? { merchant: tx.merchant, amount: 0, entries: 0, payBy: tx.payBy }
+      const payBy =
+        tx.payBy && (!current.payBy || Date.parse(tx.payBy) < Date.parse(current.payBy)) ? tx.payBy : current.payBy
       map.set(tx.merchant, {
         merchant: tx.merchant,
         amount: current.amount + tx.amount,
         entries: current.entries + 1,
+        payBy,
       })
     }
     return [...map.values()].sort((a, b) => b.amount - a.amount)
-  }, [state.transactions])
+  }, [state.customer.name, state.transactions])
 
   return (
     <div className="grid items-start gap-12 lg:grid-cols-2">
@@ -30,8 +34,8 @@ export function CustomerSettlementPage() {
           {formatInr(state.wallet.outstanding)}
         </h1>
         <p className="mt-4 max-w-md text-sm text-muted-foreground">
-          Clear each shop on its own. Open dues still auto-clear on{' '}
-          <span className="text-foreground">{state.settlement.dateLabel}</span> if you leave them.
+          Pay each shop separately. Uncleared dues still auto-clear on{' '}
+          <span className="text-foreground">{state.settlement.dateLabel}</span>.
         </p>
       </div>
 
@@ -49,6 +53,7 @@ export function CustomerSettlementPage() {
                     {store.entries} {store.entries === 1 ? 'entry' : 'entries'}
                   </p>
                   <h2 className="mt-1 font-display text-2xl text-foreground">{store.merchant}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{formatPayBy(store.payBy)}</p>
                 </div>
                 <p className="font-display text-2xl text-primary">{formatInr(store.amount)}</p>
               </div>
@@ -59,7 +64,7 @@ export function CustomerSettlementPage() {
                   setBusyStore(store.merchant)
                   settleStore(store.merchant)
                   toast.success(`Settled ${store.merchant}`, {
-                    description: `${formatInr(store.amount)} cleared from your khata.`,
+                    description: `${formatInr(store.amount)} cleared. The shop is notified.`,
                   })
                   window.setTimeout(() => setBusyStore(null), 400)
                 }}

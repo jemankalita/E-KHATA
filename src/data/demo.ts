@@ -9,7 +9,7 @@ export const SETTLEMENT_ISO = '2026-09-30'
 export const SETTLEMENT_LABEL = '30 September 2026'
 export const CUSTOMER_NAME = 'Rahul Sharma'
 export const MERCHANT_NAME = 'Sharma Stores'
-export const STORAGE_KEY = 'e-khata-state-v1'
+export const STORAGE_KEY = 'e-khata-state-v2'
 
 export const DEMO_QR_ITEMS: TransactionItem[] = [
   { name: 'Milk', quantity: 1, price: 32 },
@@ -46,6 +46,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     timestamp: '2026-09-06T08:14:00.000Z',
     verification: verifiedAll,
     settled: false,
+    payBy: '2026-09-30T18:00:00.000Z',
   },
   {
     id: 'EK-2026-000379',
@@ -59,6 +60,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     timestamp: '2026-09-06T09:40:00.000Z',
     verification: verifiedAll,
     settled: false,
+    payBy: '2026-09-10T18:00:00.000Z',
   },
   {
     id: 'EK-2026-000380',
@@ -78,10 +80,42 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
       customerConfirmation: true,
     },
     settled: false,
+    payBy: '2026-09-08T18:00:00.000Z',
+  },
+  {
+    id: 'EK-2026-000376',
+    merchant: MERCHANT_NAME,
+    customerName: 'Aman Verma',
+    category: 'Groceries',
+    amount: 240,
+    items: [{ name: 'Rice', quantity: 1, price: 240 }],
+    source: 'QR',
+    status: 'verified',
+    timestamp: '2026-09-05T11:20:00.000Z',
+    verification: verifiedAll,
+    settled: false,
+    payBy: '2026-09-15T18:00:00.000Z',
+  },
+  {
+    id: 'EK-2026-000377',
+    merchant: MERCHANT_NAME,
+    customerName: 'Priya Singh',
+    category: 'Groceries',
+    amount: 520,
+    items: [{ name: 'Monthly ration', quantity: 1, price: 520 }],
+    source: 'QR',
+    status: 'pending',
+    timestamp: '2026-09-04T16:05:00.000Z',
+    verification: verifiedAll,
+    settled: false,
+    payBy: '2026-09-12T18:00:00.000Z',
   },
 ]
 
-const listedInitial = INITIAL_TRANSACTIONS.reduce((sum, tx) => sum + tx.amount, 0)
+const listedInitial = INITIAL_TRANSACTIONS.filter((tx) => tx.customerName === CUSTOMER_NAME).reduce(
+  (sum, tx) => sum + tx.amount,
+  0,
+)
 
 export const INITIAL_STATE: KhataState = {
   customer: { name: CUSTOMER_NAME },
@@ -103,6 +137,7 @@ export const INITIAL_STATE: KhataState = {
   },
   transactions: INITIAL_TRANSACTIONS,
   pendingQr: null,
+  notices: [],
   shopkeeperRecent: [
     {
       id: 'EK-2026-000378',
@@ -135,6 +170,7 @@ export function buildDefaultPendingQr(): PendingQr {
     amount: DEMO_QR_AMOUNT,
     category: 'Groceries',
     status: 'waiting',
+    payBy: '2026-09-14T18:00:00.000Z',
   }
 }
 

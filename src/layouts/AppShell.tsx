@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/Navbar'
+import { SettlementAlerts } from '@/components/SettlementAlerts'
 import { TermsLink } from '@/components/TermsLink'
 import { useAuth } from '@/hooks/useAuth'
 import { useKhata } from '@/hooks/useKhata'
@@ -16,10 +17,11 @@ export function AppShell() {
   return (
     <div className="min-h-svh bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <SettlementAlerts />
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
         <Outlet />
       </main>
-      <footer className="mx-auto max-w-6xl px-6 pb-8">
+      <footer className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
         <TermsLink />
       </footer>
     </div>

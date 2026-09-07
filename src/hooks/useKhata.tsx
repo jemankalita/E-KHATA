@@ -7,7 +7,9 @@ import {
 import { applyPendingQr } from '@/lib/applyPendingQr'
 import { publishLiveQr } from '@/lib/liveQr'
 import { recognizeBill, type BillRecognition } from '@/lib/ocr'
+import { payByFromPreset } from '@/lib/payBy'
 import type { RfidTap } from '@/lib/rfid'
+import { markNoticesSeen as markNoticesSeenState, settleKhataAll, settleStoreBills } from '@/lib/settlement'
 import { formatSequenceId } from '@/lib/utils'
 import type {
   KhataState,
@@ -38,7 +40,17 @@ function loadState(): KhataState {
     if (!parsed.wallet || !Array.isArray(parsed.transactions)) {
       return structuredClone(INITIAL_STATE)
     }
-    return parsed
+    return {
+      ...parsed,
+      notices: Array.isArray(parsed.notices) ? parsed.notices : [],
+      pendingQr: parsed.pendingQr
+        ? { ...parsed.pendingQr, payBy: parsed.pendingQr.payBy || payByFromPreset('7d') }
+        : null,
+      transactions: parsed.transactions.map((tx) => ({
+        ...tx,
+        payBy: tx.payBy || parsed.settlement?.isoDate || payByFromPreset('7d'),
+      })),
+    }
   } catch {
     return structuredClone(INITIAL_STATE)
   }
@@ -70,12 +82,14 @@ interface KhataContextValue {
     customerName: string
     items: TransactionItem[]
     category?: string
+    payBy?: string
   }) => PendingQr
   markCustomerScanned: () => void
   confirmFromMerchant: () => Transaction | null
   applyScannedQr: (pending: PendingQr) => Transaction | null
   settleStore: (merchant: string) => void
   settleKhata: () => void
+  markNoticesSeen: (ids: string[]) => void
   ocrDraft: BillRecognition | null
   ocrBusy: boolean
   runOcr: (imageUrl: string) => Promise<BillRecognition>
@@ -87,7 +101,7 @@ const KhataContext = createContext<KhataContextValue | null>(null)
 export function KhataProvider({ children }: { children: ReactNode }) {
   const { profile, loading: authLoading } = useAuth()
   const [role, setRole] = useState<Role | null>(() => {
-    const path = window.location.pathname
+    const path = `${window.location.pathname}${window.location.hash}`
     if (path.startsWith('/customer')) return 'customer'
     if (path.startsWith('/shopkeeper')) return 'shopkeeper'
     return null
@@ -217,6 +231,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
         timestamp: new Date().toISOString(),
         verification: verifiedForSource('RFID', true),
         settled: false,
+        payBy: payByFromPreset('today'),
       }
       created = tx
       void playConfirmation(tx.amount, false)
@@ -234,7 +249,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
   }, [commit])
 
   const createMerchantQr = useCallback(
-    (input: { customerName: string; items: TransactionItem[]; category?: string }) => {
+    (input: { customerName: string; items: TransactionItem[]; category?: string; payBy?: string }) => {
       const amount = input.items.reduce((sum, item) => sum + item.quantity * item.price, 0)
       let payload: PendingQr = buildDefaultPendingQr()
       commit((prev) => {
@@ -248,6 +263,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
           amount,
           category: input.category ?? 'Groceries',
           status: 'waiting',
+          payBy: input.payBy || payByFromPreset('7d'),
         }
         void publishLiveQr(payload)
         return {
@@ -288,43 +304,15 @@ export function KhataProvider({ children }: { children: ReactNode }) {
 
   const applyScannedQr = useCallback(
     (pending: PendingQr): Transaction | null => {
-      return confirmPendingQr(pending)
+      const tx = confirmPendingQr(pending)
+      if (tx) void playConfirmation(tx.amount, false)
+      return tx
     },
     [confirmPendingQr],
   )
 
   const settleStore = useCallback((merchant: string) => {
-    commit((prev) => {
-      const openForStore = prev.transactions.filter((tx) => !tx.settled && tx.merchant === merchant)
-      if (openForStore.length === 0) return prev
-      const amount = openForStore.reduce((sum, tx) => sum + tx.amount, 0)
-      const transactions = prev.transactions.map((tx) =>
-        !tx.settled && tx.merchant === merchant ? { ...tx, settled: true } : tx,
-      )
-      const remainingOpen = transactions.some((tx) => !tx.settled)
-      const isHomeMerchant = merchant === prev.merchant.name
-      return {
-        ...prev,
-        wallet: {
-          ...prev.wallet,
-          outstanding: Math.max(0, prev.wallet.outstanding - amount),
-        },
-        merchant: isHomeMerchant
-          ? {
-              ...prev.merchant,
-              outstanding: Math.max(0, prev.merchant.outstanding - amount),
-            }
-          : prev.merchant,
-        transactions,
-        settlement: remainingOpen
-          ? prev.settlement
-          : {
-              ...prev.settlement,
-              status: 'cleared',
-              clearedAt: new Date().toISOString(),
-            },
-      }
-    })
+    commit((prev) => settleStoreBills(prev, merchant, new Date(), prev.customer.name))
   }, [commit])
 
   const runOcr = useCallback(async (imageUrl: string) => {
@@ -339,29 +327,11 @@ export function KhataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const settleKhata = useCallback(() => {
-    commit((prev) => {
-      const sharmaShare = prev.transactions
-        .filter((tx) => !tx.settled && tx.merchant === prev.merchant.name)
-        .reduce((sum, tx) => sum + tx.amount, 0)
-      return {
-        ...prev,
-        wallet: {
-          ...prev.wallet,
-          outstanding: 0,
-          carriedForward: 0,
-        },
-        merchant: {
-          ...prev.merchant,
-          outstanding: Math.max(0, prev.merchant.outstanding - sharmaShare),
-        },
-        transactions: prev.transactions.map((tx) => ({ ...tx, settled: true })),
-        settlement: {
-          ...prev.settlement,
-          status: 'cleared',
-          clearedAt: new Date().toISOString(),
-        },
-      }
-    })
+    commit((prev) => settleKhataAll(prev, new Date()))
+  }, [commit])
+
+  const markNoticesSeen = useCallback((ids: string[]) => {
+    commit((prev) => markNoticesSeenState(prev, ids))
   }, [commit])
 
   useEffect(() => {
@@ -385,6 +355,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       applyScannedQr,
       settleStore,
       settleKhata,
+      markNoticesSeen,
       ocrDraft,
       ocrBusy,
       runOcr,
@@ -403,6 +374,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       applyScannedQr,
       settleStore,
       settleKhata,
+      markNoticesSeen,
       ocrDraft,
       ocrBusy,
       runOcr,

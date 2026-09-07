@@ -8,7 +8,10 @@ import { ThemeProvider } from '@/hooks/useTheme.tsx'
 import { ClickRipple } from '@/components/ClickRipple'
 import { DarkGrain } from '@/components/DarkGrain'
 import { Toaster } from './components/ui/sonner.tsx'
+import { startNativeShell } from '@/lib/nativeShell'
 import './index.css'
+
+void startNativeShell()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

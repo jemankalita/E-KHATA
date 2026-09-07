@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import { PRODUCT_CATALOG } from '../data/catalog'
 import { CUSTOMERS, MERCHANT_NAME, TRANSACTIONS } from '../data/seed'
+import { apiUrl } from '../lib/api'
 import { matchItems, overallConfidence } from '../lib/matching'
 import { recognizeBill } from '../lib/ocr'
 import { autoSettleDue } from '../lib/khata'
@@ -157,7 +158,7 @@ const StoreContext = createContext<StoreValue | null>(null)
 
 async function apiReachable(): Promise<boolean> {
   try {
-    const response = await fetch('/api/state', { cache: 'no-store' })
+    const response = await fetch(apiUrl('/api/state'), { cache: 'no-store' })
     return response.ok
   } catch {
     return false
@@ -175,7 +176,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof EventSource === 'undefined') return
-    const source = new EventSource('/api/events')
+    const source = new EventSource(apiUrl('/api/events'))
     source.onmessage = (event) => {
       const data = JSON.parse(event.data) as {
         type?: string

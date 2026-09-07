@@ -37,6 +37,7 @@ describe('resolveScannedCharge', () => {
       amount: 32,
       category: 'Groceries',
       status: 'waiting',
+      payBy: '2026-09-14T18:00:00.000Z',
     }
     const url = buildKhataQrUrl('https://e-khata.example', bill)
     expect(resolveScannedCharge(url, context)).toMatchObject({

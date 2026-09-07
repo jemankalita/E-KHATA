@@ -2,6 +2,7 @@ import { QRGenerator } from '@/components/QRGenerator'
 import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
 import { fetchLiveQr } from '@/lib/liveQr'
+import { formatPayBy } from '@/lib/payBy'
 import { playConfirmation } from '@/lib/voice'
 import { motion } from 'framer-motion'
 import { Check, Loader } from 'lucide-react'
@@ -51,8 +52,7 @@ export function ShopkeeperQrPage() {
         <p className="text-[13px] text-accent">QR is live</p>
         <h1 className="mt-2 font-display text-5xl text-foreground">{pending.merchant}</h1>
         <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Ask the customer to open their phone camera and point it at this code. When they confirm, the bill
-          posts to your account.
+          Ask the customer to scan this code. {pending.payBy ? formatPayBy(pending.payBy) : 'Set a pay-by date on the bill.'}
         </p>
         <div className="mt-6 rounded-[24px] bg-card px-4 py-4">
           {status === 'waiting' ? (

@@ -7,14 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { WalletCard } from '@/components/WalletCard'
 import { useAutomaticRfid } from '@/hooks/useAutomaticRfid'
 import { useKhata } from '@/hooks/useKhata'
-import { cumulativeSeries } from '@/lib/moneyGraph'
+import { soonestPayBy } from '@/lib/customerBalances'
+import { formatPayBy, isOverdue } from '@/lib/payBy'
 import type { RfidTap } from '@/lib/rfid'
 import { formatInr } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import { Nfc, QrCode, Radio } from 'lucide-react'
+import { QrCode, Radio } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -25,35 +25,23 @@ export function CustomerDashboardPage() {
   const [recognized, setRecognized] = useState<RfidTap | null>(null)
   const listenerRef = useRef<HTMLDivElement>(null)
 
-  const recent = state.transactions.filter((tx) => !tx.settled).slice(0, 6)
-  const openTxs = state.transactions.filter((tx) => !tx.settled)
-  const qrTotal = openTxs.filter((tx) => tx.source === 'QR').reduce((s, tx) => s + tx.amount, 0)
-  const rfidTotal = openTxs.filter((tx) => tx.source === 'RFID').reduce((s, tx) => s + tx.amount, 0)
-  const moneySeries = useMemo(() => {
-    const ordered = [...state.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-    return cumulativeSeries(
-      state.wallet.carriedForward,
-      ordered.map((tx) => tx.amount),
-    )
-  }, [state.transactions, state.wallet.carriedForward])
-  const chartLabels = useMemo(() => {
-    const ordered = [...state.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-    if (ordered.length === 0) return ['Open', 'Now']
-    return [
-      'Open',
-      ...ordered.map((tx) =>
-        new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(new Date(tx.timestamp)),
-      ),
-    ]
-  }, [state.transactions])
+  const mine = useMemo(
+    () => state.transactions.filter((tx) => tx.customerName === state.customer.name && !tx.settled),
+    [state.customer.name, state.transactions],
+  )
+  const due = soonestPayBy(mine)
+  const overdue = due ? isOverdue(due) : false
 
-  const monthly = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const tx of openTxs) {
-      map.set(tx.merchant, (map.get(tx.merchant) ?? 0) + tx.amount)
+  const stores = useMemo(() => {
+    const map = new Map<string, { merchant: string; amount: number }>()
+    for (const tx of mine) {
+      map.set(tx.merchant, {
+        merchant: tx.merchant,
+        amount: (map.get(tx.merchant)?.amount ?? 0) + tx.amount,
+      })
     }
-    return [...map.entries()].sort((a, b) => b[1] - a[1])
-  }, [openTxs])
+    return [...map.values()].sort((a, b) => b.amount - a.amount)
+  }, [mine])
 
   const onCard = useCallback(
     (tap: RfidTap) => {
@@ -69,61 +57,74 @@ export function CustomerDashboardPage() {
   useAutomaticRfid(onCard)
 
   return (
-    <div>
-      <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-        <WalletCard
-          outstanding={state.wallet.outstanding}
-          nextSettlement={state.wallet.nextSettlement}
-          series={moneySeries}
-          labels={chartLabels}
-        />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <MiniCard label="QR khata" value={formatInr(qrTotal)} delta="Verified" />
-          <MiniCard label="RFID" value={formatInr(rfidTotal)} delta="Auto listen" />
-          <div
-            ref={listenerRef}
-            tabIndex={-1}
-            data-testid="rfid-listener"
-            className="flex items-center justify-between rounded-[24px] bg-accent px-5 py-4 text-left text-accent-foreground outline-none sm:col-span-2"
-          >
-            <span>
-              <span className="block text-[11px] opacity-70">Automatic RFID recognition</span>
-              <span className="text-[16px] font-medium">Listening for RFID</span>
-              <span className="mt-1 block text-[12px] opacity-80">
-                Hold a card or scan a barcode. Bus ₹20, metro ₹50, canteen ₹100. Demo UIDs: EKRFID21G,
-                EKRFIDMETRO, EKRFIDCANTEEN
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-3 py-1.5 text-[12px] font-medium">
-              <Nfc className="size-3.5" /> Live
-            </span>
-          </div>
-          <Button className="sm:col-span-2" onClick={() => navigate('/customer/scan')}>
-            <QrCode /> Scan a pack
-          </Button>
-          <Button variant="secondary" className="sm:col-span-2" onClick={() => navigate('/customer/scan?mode=qr')}>
-            Scan a QR bill
-          </Button>
-          <Button variant="secondary" className="sm:col-span-2" onClick={() => navigate('/customer/ledger')}>
-            Open my khata
-          </Button>
-        </div>
+    <div className="mx-auto max-w-2xl">
+      <div
+        ref={listenerRef}
+        tabIndex={-1}
+        data-testid="rfid-listener"
+        className="sr-only"
+      >
+        Listening for RFID
       </div>
 
-      <section className="mt-14">
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="font-display text-3xl text-foreground">You have {openTxs.length} open entries</h2>
-          <button type="button" className="text-[13px] text-primary" onClick={() => navigate('/customer/ledger')}>
-            See all
-          </button>
+      <p className="text-[13px] text-accent">{state.customer.name}</p>
+      <h1 className="mt-1 font-display text-4xl leading-[1.05] text-foreground sm:text-5xl">To pay</h1>
+
+      <section className="mt-8 rounded-[28px] bg-card p-6">
+        <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">Open balance</p>
+        <p className="mt-2 font-display text-4xl tabular-nums text-foreground md:text-5xl">
+          {formatInr(state.wallet.outstanding)}
+        </p>
+        <p className={`mt-2 text-sm ${overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+          {due ? formatPayBy(due) : `Due ${state.wallet.nextSettlement}`}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button size="lg" onClick={() => navigate('/customer/settlement')} disabled={mine.length === 0}>
+            Settle
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate('/customer/scan')}>
+            <QrCode /> Scan
+          </Button>
         </div>
-        {recent.length === 0 ? (
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">By shop</h2>
+        {stores.length === 0 ? (
           <p className="rounded-[24px] bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-            No open entries. Your khata is clear.
+            Nothing to pay. Your khata is clear.
           </p>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {recent.map((tx) => (
+          <ul className="space-y-2">
+            {stores.map((store) => (
+              <li
+                key={store.merchant}
+                className="flex items-center justify-between rounded-[24px] bg-card px-4 py-4"
+              >
+                <p className="text-foreground">{store.merchant}</p>
+                <p className="font-display text-xl tabular-nums">{formatInr(store.amount)}</p>
+              </li>
+            ))}
+            {state.wallet.carriedForward > 0 ? (
+              <li className="flex items-center justify-between rounded-[24px] bg-card px-4 py-4">
+                <p className="text-muted-foreground">Earlier balance</p>
+                <p className="font-display text-xl tabular-nums">{formatInr(state.wallet.carriedForward)}</p>
+              </li>
+            ) : null}
+          </ul>
+        )}
+      </section>
+
+      {mine.length > 0 ? (
+        <section className="mt-8">
+          <div className="mb-3 flex items-end justify-between">
+            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">Open bills</h2>
+            <button type="button" className="text-[13px] text-primary" onClick={() => navigate('/customer/ledger')}>
+              All
+            </button>
+          </div>
+          <div className="grid gap-3">
+            {mine.slice(0, 5).map((tx) => (
               <TransactionCard
                 key={tx.id}
                 transaction={tx}
@@ -131,36 +132,8 @@ export function CustomerDashboardPage() {
               />
             ))}
           </div>
-        )}
-      </section>
-
-      <section className="mt-8 rounded-[28px] bg-card p-6">
-        <p className="text-[13px] text-accent">2 · This cycle</p>
-        <h3 className="mt-1 font-display text-2xl text-foreground">Spending mix</h3>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          {monthly.map(([merchant, amount]) => {
-            const pct = state.wallet.outstanding ? Math.round((amount / state.wallet.outstanding) * 100) : 0
-            return (
-              <div key={merchant}>
-                <div className="mb-1 flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">{merchant}</span>
-                  <span>{formatInr(amount)}</span>
-                </div>
-                <div
-                  className="h-1.5 overflow-hidden rounded-full bg-foreground/10"
-                  role="progressbar"
-                  aria-label={`${merchant} share of outstanding`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={pct}
-                >
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <Dialog open={recognized !== null} onOpenChange={(open) => !open && setRecognized(null)}>
         <DialogContent
@@ -173,7 +146,7 @@ export function CustomerDashboardPage() {
             <DialogTitle className="flex items-center gap-2 text-accent">
               <Radio className="size-5" /> RFID recognized
             </DialogTitle>
-            <DialogDescription>Card matched automatically. Fare posted to your khata.</DialogDescription>
+            <DialogDescription>Fare posted to your khata.</DialogDescription>
           </DialogHeader>
           {recognized ? (
             <motion.div
@@ -182,10 +155,7 @@ export function CustomerDashboardPage() {
               className="mt-4 space-y-3 rounded-[20px] bg-background p-4"
             >
               <p className="font-display text-3xl text-foreground">{recognized.merchant}</p>
-              <Row label="Fare" value={formatInr(recognized.amount)} />
-              <Row label="Card" value={recognized.uid} />
-              <Row label="Source" value="RFID" />
-              <Row label="Status" value="Verified" />
+              <p className="text-sm text-muted-foreground">{formatInr(recognized.amount)}</p>
             </motion.div>
           ) : null}
           <Button className="mt-5 w-full" onClick={() => setRecognized(null)}>
@@ -193,25 +163,6 @@ export function CustomerDashboardPage() {
           </Button>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-function MiniCard({ label, value, delta }: { label: string; value: string; delta: string }) {
-  return (
-    <div className="rounded-[24px] bg-card p-5">
-      <p className="text-[13px] text-muted-foreground">{label}</p>
-      <p className="mt-3 font-display text-3xl text-foreground">{value}</p>
-      <span className="mt-2 inline-flex rounded-full bg-accent/15 px-2 py-0.5 text-[11px] text-accent">{delta}</span>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-foreground">{value}</span>
     </div>
   )
 }
