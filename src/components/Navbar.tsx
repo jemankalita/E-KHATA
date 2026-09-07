@@ -37,7 +37,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-4 py-2 sm:gap-8 sm:px-6">
-        <BrandWordmark showTagline />
+        <BrandWordmark showTagline className="min-w-0 shrink" />
         <nav className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
             <Link
@@ -54,7 +54,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
             to={primary.to}
             className="hidden items-center gap-2 rounded-full bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground sm:inline-flex"

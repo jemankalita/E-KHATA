@@ -85,8 +85,11 @@ export function LoginPage() {
           light ? 'border-[#071428]/10 bg-white/35 text-[#071428]' : 'border-white/8 bg-black/20 text-white'
         }`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <BrandWordmark className={ink} />
+        <div
+          data-testid="login-header-bar"
+          className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4"
+        >
+          <BrandWordmark className={`${ink} min-w-0 shrink`} />
           <LoginSectionNav
             active={activeSection}
             tone={light ? 'bar' : 'sky'}
@@ -94,7 +97,7 @@ export function LoginPage() {
               light ? 'border border-[#071428]/12 bg-white/70' : 'border border-white/10 bg-white/5'
             }`}
           />
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <ThemeToggle />
             <a
               href="#enter"
@@ -106,7 +109,7 @@ export function LoginPage() {
             </a>
             <a
               href="#enter"
-              className={`inline-flex items-center gap-1 rounded-full px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em] ${
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-[11px] font-medium uppercase tracking-[0.16em] sm:px-4 ${
                 light ? 'bg-[#0b1f3a] text-white' : 'bg-white text-zinc-950'
               }`}
             >

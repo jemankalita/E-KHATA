@@ -56,6 +56,20 @@ describe('LoginPage', () => {
     expect(within(container).getByRole('link', { name: /^e-khata$/i })).toHaveAttribute('href', '/login')
   })
 
+  it('keeps the theme switch in a non-shrinking header cluster beside the brand', () => {
+    const { container } = renderLogin()
+    const view = within(container)
+    const brand = view.getByRole('link', { name: /^e-khata$/i })
+    const theme = view.getByRole('group', { name: /color theme/i })
+    const headerBar = brand.closest('header')?.querySelector('[data-testid="login-header-bar"]')
+
+    expect(headerBar).toBeTruthy()
+    expect(headerBar).toContainElement(brand)
+    expect(headerBar).toContainElement(theme)
+    expect(theme.parentElement).toHaveClass('shrink-0')
+    expect(brand.querySelector('[data-brand-name]')).toHaveClass('whitespace-nowrap')
+  })
+
   it('plays the night video behind the landing page in dark mode', () => {
     const { container } = renderLogin()
     const video = within(container).getByTestId('landing-video-backdrop').querySelector('video')
