@@ -8,6 +8,7 @@ const applyScannedQr = vi.hoisted(() => vi.fn())
 const addRfidFare = vi.hoisted(() => vi.fn())
 const toastSuccess = vi.hoisted(() => vi.fn())
 const toastError = vi.hoisted(() => vi.fn())
+const unlockVoicePlayback = vi.hoisted(() => vi.fn())
 let lastOnRead: ((value: string) => void) | undefined
 
 vi.mock('@/hooks/useKhata', () => ({
@@ -26,6 +27,10 @@ vi.mock('@/hooks/useKhata', () => ({
 
 vi.mock('sonner', () => ({
   toast: { success: toastSuccess, error: toastError },
+}))
+
+vi.mock('@/lib/voice', () => ({
+  unlockVoicePlayback,
 }))
 
 vi.mock('@/lib/liveQr', () => ({
@@ -75,6 +80,7 @@ describe('CustomerScanPage auto wallet', () => {
     addRfidFare.mockReset()
     toastSuccess.mockReset()
     toastError.mockReset()
+    unlockVoicePlayback.mockReset()
     lastOnRead = undefined
     applyScannedQr.mockReturnValue({ id: 'posted' })
     addRfidFare.mockReturnValue({ id: 'rfid' })
@@ -107,6 +113,7 @@ describe('CustomerScanPage auto wallet', () => {
     await user.click(screen.getByRole('button', { name: /simulate bill qr/i }))
 
     expect(applyScannedQr).toHaveBeenCalledWith(expect.objectContaining({ id: 'EK-2026-000399', amount: 77 }))
+    expect(unlockVoicePlayback).toHaveBeenCalled()
     expect(await screen.findByText(/added to wallet/i)).toBeInTheDocument()
   })
 

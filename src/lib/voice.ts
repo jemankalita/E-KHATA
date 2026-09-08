@@ -1,8 +1,12 @@
 import { apiUrl } from './api'
 
 const LOCAL_AUDIO = ['/audio/confirm.mp3', '/audio/confirm.wav']
+/** Tiny silent WAV so unlock does not depend on a missing public file. */
+const SILENT_WAV =
+  'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
 
 let sessionAudio: HTMLAudioElement | null = null
+let audioCtx: AudioContext | null = null
 let primed = false
 
 export function spokenRupees(amount: number): string {
@@ -15,8 +19,22 @@ export function confirmationLine(amount: number): string {
   return `${spokenRupees(amount)} rupees E-Khata mein add ho gaye.`
 }
 
+export function pickFemaleHindiVoice<T extends { name: string; lang: string }>(voices: T[]): T | undefined {
+  const hindi = voices.filter(
+    (voice) => /^hi([-_]|$)/i.test(voice.lang) || /hindi/i.test(voice.name),
+  )
+  const female = /female|woman|kalpana|lekha|heera|swara|ananya|neerja|kajal/i
+  const male = /male|\bman\b|hemant|ravi|prabhat/i
+  return (
+    hindi.find((voice) => female.test(voice.name) && !male.test(voice.name)) ??
+    hindi.find((voice) => !male.test(voice.name)) ??
+    hindi[0]
+  )
+}
+
 export function resetVoicePlaybackForTests() {
   sessionAudio = null
+  audioCtx = null
   primed = false
 }
 
@@ -25,13 +43,28 @@ function getSessionAudio(): HTMLAudioElement {
   return sessionAudio
 }
 
-/** Keep a single audio element unlocked across the ElevenLabs round-trip. */
+function audioContextCtor(): (typeof AudioContext) | undefined {
+  if (typeof window === 'undefined') return undefined
+  return window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+}
+
+function ensureAudioContext(): AudioContext | null {
+  const Ctor = audioContextCtor()
+  if (!Ctor) return null
+  if (!audioCtx) audioCtx = new Ctor()
+  return audioCtx
+}
+
+/** Keep a single audio element / AudioContext unlocked across the ElevenLabs round-trip. */
 export function unlockVoicePlayback(): void {
+  const ctx = ensureAudioContext()
+  if (ctx && ctx.state !== 'closed') void ctx.resume()
+
   if (typeof Audio === 'undefined') return
   const audio = getSessionAudio()
   if (!primed) {
     audio.muted = true
-    audio.src = LOCAL_AUDIO[0]
+    audio.src = SILENT_WAV
     primed = true
   }
   void Promise.resolve(audio.play())
@@ -41,6 +74,33 @@ export function unlockVoicePlayback(): void {
     .catch(() => {
       audio.muted = false
     })
+
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      const warm = new SpeechSynthesisUtterance(' ')
+      warm.volume = 0
+      warm.lang = 'hi-IN'
+      window.speechSynthesis.speak(warm)
+    } catch {
+      /* browsers may reject speak() outside a gesture */
+    }
+  }
+}
+
+async function playDecodedBuffer(data: ArrayBuffer): Promise<boolean> {
+  if (!audioCtx) return false
+  try {
+    await audioCtx.resume()
+    if (audioCtx.state !== 'running') return false
+    const decoded = await audioCtx.decodeAudioData(data.slice(0))
+    const source = audioCtx.createBufferSource()
+    source.buffer = decoded
+    source.connect(audioCtx.destination)
+    source.start(0)
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function playHtmlAudio(src: string): Promise<boolean> {
@@ -75,8 +135,9 @@ async function playElevenLabs(text: string): Promise<boolean> {
       body: JSON.stringify({ text }),
     })
     if (!response.ok) return false
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
+    const buffer = await response.arrayBuffer()
+    if (await playDecodedBuffer(buffer)) return true
+    const url = URL.createObjectURL(new Blob([buffer], { type: 'audio/mpeg' }))
     return playHtmlAudio(url)
   } catch {
     return false
@@ -88,6 +149,8 @@ function playSpeechSynthesis(text: string): boolean {
   const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = 'hi-IN'
   utterance.rate = 0.95
+  const voice = pickFemaleHindiVoice(window.speechSynthesis.getVoices())
+  if (voice) utterance.voice = voice
   window.speechSynthesis.cancel()
   window.speechSynthesis.speak(utterance)
   return true

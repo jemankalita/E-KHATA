@@ -59,6 +59,7 @@ export function CustomerScanPage() {
 
   const onRead = useCallback(
     (value: string) => {
+      unlockVoicePlayback()
       const tap = recognizeRfid(value)
       if (tap) {
         postRfid(tap)

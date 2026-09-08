@@ -1,9 +1,12 @@
 import { PRODUCT_CATALOG } from '@/data/catalog'
 import { parseKhataQrValue } from '@/lib/khataQr'
-import { normalizeName } from '@/lib/matching'
+import { normalizeName, similarity } from '@/lib/matching'
 import { payByFromPreset } from '@/lib/payBy'
 import type { PendingQr } from '@/types'
 import type { Product } from '@/legacy/types'
+
+const FUZZY_PHRASE_MIN_LENGTH = 5
+const FUZZY_MATCH_THRESHOLD = 0.85
 
 export interface ScanChargeContext {
   nextId: string
@@ -23,19 +26,42 @@ function containsPhrase(haystack: string, needle: string): boolean {
   return ` ${haystack} `.includes(` ${needle} `)
 }
 
+function similarLength(left: string, right: string): boolean {
+  const maxLen = Math.max(left.length, right.length)
+  const minLen = Math.min(left.length, right.length)
+  return maxLen > 0 && minLen / maxLen >= 0.8
+}
+
 export function findProductInPackText(raw: string): Product | null {
   const haystack = normalizeName(raw)
   if (!haystack) return null
 
   let best: Product | null = null
-  let bestLength = 0
+  let bestScore = 0
+  const tokens = haystack.split(' ')
 
   for (const product of PRODUCT_CATALOG) {
     for (const phrase of catalogPhrases(product)) {
-      if (!containsPhrase(haystack, phrase)) continue
-      if (phrase.length > bestLength) {
-        best = product
-        bestLength = phrase.length
+      if (containsPhrase(haystack, phrase)) {
+        const score = phrase.length + 100
+        if (score > bestScore) {
+          best = product
+          bestScore = score
+        }
+        continue
+      }
+      if (phrase.length < FUZZY_PHRASE_MIN_LENGTH) continue
+      const n = phrase.split(' ').length
+      for (let i = 0; i + n <= tokens.length; i += 1) {
+        const window = tokens.slice(i, i + n).join(' ')
+        if (!similarLength(window, phrase)) continue
+        const closeness = similarity(window, phrase)
+        if (closeness < FUZZY_MATCH_THRESHOLD) continue
+        const score = phrase.length * closeness
+        if (score > bestScore) {
+          best = product
+          bestScore = score
+        }
       }
     }
   }

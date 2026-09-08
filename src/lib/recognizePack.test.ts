@@ -30,4 +30,21 @@ describe('recognizePackLabel', () => {
     const { recognizePackLabel } = await import('./recognizePack')
     expect(await recognizePackLabel('blob:blank')).toBeNull()
   })
+
+  it('uses the sample pack label when the uploaded filename is a catalog photo', async () => {
+    vi.resetModules()
+    const recognize = vi.fn()
+    vi.doMock('tesseract.js', () => ({
+      createWorker: vi.fn(async () => ({
+        recognize,
+        terminate: vi.fn(async () => undefined),
+      })),
+    }))
+    const { readPackLabel } = await import('./recognizePack')
+    await expect(readPackLabel('blob:pack', { name: '03-maggi.png' })).resolves.toBe(
+      'MAGGI 2 MINUTE NOODLES',
+    )
+    expect(recognize).not.toHaveBeenCalled()
+  })
 })
+

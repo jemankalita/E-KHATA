@@ -2,10 +2,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CameraQrReader } from './CameraQrReader'
 import { decodeQrFromFile } from '@/lib/decodeQr'
+import { unlockVoicePlayback } from '@/lib/voice'
 
 vi.mock('@/lib/decodeQr', () => ({
   decodeQrFromFile: vi.fn(),
   decodeQrFromVideoFrame: vi.fn(() => null),
+}))
+
+vi.mock('@/lib/voice', () => ({
+  unlockVoicePlayback: vi.fn(),
 }))
 
 const mockedDecodeFile = vi.mocked(decodeQrFromFile)
@@ -13,6 +18,7 @@ const mockedDecodeFile = vi.mocked(decodeQrFromFile)
 describe('CameraQrReader', () => {
   beforeEach(() => {
     mockedDecodeFile.mockReset()
+    vi.mocked(unlockVoicePlayback).mockClear()
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
       value: {
@@ -32,6 +38,7 @@ describe('CameraQrReader', () => {
     await waitFor(() => {
       expect(onRead).toHaveBeenCalledWith('https://e-khata.local/pay?ref=abc')
     })
+    expect(unlockVoicePlayback).toHaveBeenCalled()
     expect(screen.queryByText(/cannot read a photo qr/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/upload qr photo/i)).not.toHaveAttribute('capture')
   })

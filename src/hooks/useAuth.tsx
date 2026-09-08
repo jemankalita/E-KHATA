@@ -6,6 +6,7 @@ import {
   startGoogleSignIn,
   type Profile,
 } from '@/lib/auth'
+import { isNativeRuntime } from '@/lib/nativeRuntime'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 import type { Role } from '@/types'
 import {
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         storage: localStorage,
         origin: window.location.origin,
         role,
+        stayInApp: isNativeRuntime(),
       })
     },
     [client],

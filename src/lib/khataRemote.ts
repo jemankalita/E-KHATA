@@ -1,4 +1,4 @@
-import { INITIAL_STATE } from '@/data/demo'
+import { payByFromPreset } from '@/lib/payBy'
 import type { KhataState, Role } from '@/types'
 
 export interface KhataRemoteClient {
@@ -27,13 +27,49 @@ export function isKhataState(value: unknown): value is KhataState {
   )
 }
 
-export function seedKhataState(profile: { role: Role; displayName: string }): KhataState {
-  const seeded = structuredClone(INITIAL_STATE)
-  if (!profile.displayName.trim()) return seeded
-  if (profile.role === 'customer') {
-    return { ...seeded, customer: { name: profile.displayName } }
+function openingSettlement(now: Date) {
+  const due = new Date(payByFromPreset('30d', now))
+  return {
+    isoDate: due.toISOString().slice(0, 10),
+    dateLabel: new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(due),
   }
-  return { ...seeded, merchant: { ...seeded.merchant, name: profile.displayName } }
+}
+
+export function emptyKhataState(profile: { role: Role; displayName: string }, now = new Date()): KhataState {
+  const name = profile.displayName.trim()
+  const settlement = openingSettlement(now)
+  return {
+    customer: { name: profile.role === 'customer' && name ? name : 'New customer' },
+    merchant: {
+      name: profile.role === 'shopkeeper' && name ? name : 'New shop',
+      outstanding: 0,
+      activeCustomers: 0,
+      pendingConfirmations: 0,
+    },
+    wallet: {
+      outstanding: 0,
+      nextSettlement: settlement.dateLabel,
+      carriedForward: 0,
+    },
+    settlement: {
+      dateLabel: settlement.dateLabel,
+      isoDate: settlement.isoDate,
+      status: 'open',
+    },
+    transactions: [],
+    pendingQr: null,
+    notices: [],
+    shopkeeperRecent: [],
+    nextSequence: 1,
+  }
+}
+
+export function seedKhataState(profile: { role: Role; displayName: string }, now = new Date()): KhataState {
+  return emptyKhataState(profile, now)
 }
 
 export async function loadKhataState(client: KhataRemoteClient, userId: string) {

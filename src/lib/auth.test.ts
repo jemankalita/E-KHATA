@@ -62,6 +62,13 @@ describe('auth routing helpers', () => {
       redirectTo: 'http://localhost:5173/auth/callback',
     })
   })
+
+  it('keeps the Google redirect inside the native WebView', () => {
+    expect(googleOAuthOptions('https://localhost', { stayInApp: true })).toEqual({
+      redirectTo: 'https://localhost/auth/callback',
+      skipBrowserRedirect: true,
+    })
+  })
 })
 
 describe('resolveOAuthSession', () => {
@@ -238,6 +245,34 @@ describe('startGoogleSignIn', () => {
         redirectTo: 'http://localhost:5173/auth/callback',
       },
     })
+  })
+
+  it('opens the Google URL inside the app instead of handing it to Chrome', async () => {
+    const assignUrl = vi.fn()
+    const signInWithOAuth = vi.fn(async () => ({
+      data: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=test' },
+      error: null,
+    }))
+
+    await startGoogleSignIn({
+      client: { auth: { signInWithOAuth } } as never,
+      storage: { setItem: vi.fn() } as unknown as Storage,
+      origin: 'https://localhost',
+      role: 'customer',
+      stayInApp: true,
+      assignUrl,
+    })
+
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://localhost/auth/callback',
+        skipBrowserRedirect: true,
+      },
+    })
+    expect(assignUrl).toHaveBeenCalledWith(
+      'https://accounts.google.com/o/oauth2/v2/auth?client_id=test',
+    )
   })
 
   it('fails clearly when Supabase is not configured', async () => {

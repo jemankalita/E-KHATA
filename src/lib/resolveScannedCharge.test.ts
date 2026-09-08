@@ -25,6 +25,20 @@ describe('findProductInPackText', () => {
   it('returns null when the pack is not in the catalog', () => {
     expect(findProductInPackText('unknown snack brand xyz')).toBeNull()
   })
+
+  it('recognizes Parle-G from noisy OCR of the sample photo', () => {
+    expect(
+      findProductInPackText('RI E-G mm ARLE SLUCOSE BISCUIT Fam ee Rat ER')?.id,
+    ).toBe('parle-g')
+  })
+
+  it('does not treat a generic masala tagline as Maggi', () => {
+    expect(findProductInPackText('Your favourite Masala Tast , GOOD GIN Masala Free')).toBeNull()
+  })
+
+  it('still recognizes Amul milk from the sample photo OCR dump', () => {
+    expect(findProductInPackText('3 Amul — TAAZA A k7 p | TONED MILK 4')?.id).toBe('milk')
+  })
 })
 
 describe('resolveScannedCharge', () => {

@@ -1,4 +1,5 @@
 import { findProductInPackText } from '@/lib/resolveScannedCharge'
+import { samplePackFromFileName } from '@/lib/samplePack'
 import type { Product } from '@/legacy/types'
 
 export async function readPackText(imageUrl: string): Promise<string> {
@@ -16,7 +17,16 @@ export async function readPackText(imageUrl: string): Promise<string> {
   }
 }
 
+export async function readPackLabel(
+  imageUrl: string,
+  file?: Pick<File, 'name'>,
+): Promise<string> {
+  const sample = samplePackFromFileName(file?.name)
+  if (sample) return sample.ocrText
+  return readPackText(imageUrl)
+}
+
 export async function recognizePackLabel(imageUrl: string): Promise<Product | null> {
-  const text = await readPackText(imageUrl)
+  const text = await readPackLabel(imageUrl)
   return findProductInPackText(text)
 }

@@ -55,12 +55,45 @@ describe('khata remote store', () => {
     )
   })
 
-  it('names a new customer khata after the Google profile', () => {
+  it('starts a new customer khata at zero with no borrowed demo bills', () => {
     const seeded = seedKhataState({
       role: 'customer',
       displayName: 'Priya Singh',
     })
     expect(seeded.customer.name).toBe('Priya Singh')
-    expect(seeded.transactions).toEqual(INITIAL_STATE.transactions)
+    expect(seeded.wallet.outstanding).toBe(0)
+    expect(seeded.wallet.carriedForward).toBe(0)
+    expect(seeded.merchant.outstanding).toBe(0)
+    expect(seeded.merchant.activeCustomers).toBe(0)
+    expect(seeded.transactions).toEqual([])
+    expect(seeded.shopkeeperRecent).toEqual([])
+    expect(seeded.pendingQr).toBeNull()
+  })
+
+  it('starts a new shopkeeper khata at zero under the shop name', () => {
+    const seeded = seedKhataState({
+      role: 'shopkeeper',
+      displayName: 'Gupta Kirana',
+    })
+    expect(seeded.merchant.name).toBe('Gupta Kirana')
+    expect(seeded.merchant.outstanding).toBe(0)
+    expect(seeded.merchant.pendingConfirmations).toBe(0)
+    expect(seeded.wallet.outstanding).toBe(0)
+    expect(seeded.transactions).toEqual([])
+    expect(seeded.shopkeeperRecent).toEqual([])
+  })
+
+  it('does not reuse the pitch demo settlement date after that month has passed', () => {
+    const now = new Date('2026-10-15T08:00:00.000Z')
+    const seeded = seedKhataState(
+      {
+        role: 'customer',
+        displayName: 'Priya Singh',
+      },
+      now,
+    )
+    expect(seeded.settlement.isoDate).not.toBe('2026-09-30')
+    expect(new Date(`${seeded.settlement.isoDate}T23:59:59.000Z`).getTime()).toBeGreaterThan(now.getTime())
+    expect(seeded.wallet.nextSettlement).toBe(seeded.settlement.dateLabel)
   })
 })

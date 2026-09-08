@@ -1,13 +1,24 @@
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useKhata } from '@/hooks/useKhata'
 import { formatPayBy } from '@/lib/payBy'
+import { openSettlementCheckout, type SettlementPaymentOutcome } from '@/lib/razorpayCheckout'
+import { buildSettlementPayment, type SettlementPaymentRequest } from '@/lib/settlementPayment'
 import { formatInr } from '@/lib/utils'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 export function CustomerSettlementPage() {
   const { state, settleStore } = useKhata()
   const [busyStore, setBusyStore] = useState<string | null>(null)
+  const [demoPay, setDemoPay] = useState<SettlementPaymentRequest | null>(null)
+  const demoResolve = useRef<((outcome: SettlementPaymentOutcome) => void) | null>(null)
 
   const stores = useMemo(() => {
     const open = state.transactions.filter((tx) => !tx.settled && tx.customerName === state.customer.name)
@@ -26,6 +37,58 @@ export function CustomerSettlementPage() {
     return [...map.values()].sort((a, b) => b.amount - a.amount)
   }, [state.customer.name, state.transactions])
 
+  const closeDemoPay = (outcome: SettlementPaymentOutcome) => {
+    const resolve = demoResolve.current
+    if (!resolve) return
+    demoResolve.current = null
+    setDemoPay(null)
+    resolve(outcome)
+  }
+
+  const payAndSettle = async (store: { merchant: string; amount: number }) => {
+    if (busyStore !== null) return
+    setBusyStore(store.merchant)
+    try {
+      const request = buildSettlementPayment({
+        merchant: store.merchant,
+        customerName: state.customer.name,
+        amountInr: store.amount,
+      })
+      const outcome = await openSettlementCheckout(request, {
+        openDemoCheckout: (pending) =>
+          new Promise((resolve) => {
+            demoResolve.current = resolve
+            setDemoPay(pending)
+          }),
+      })
+
+      if (outcome.status === 'paid') {
+        settleStore(store.merchant)
+        toast.success(`Paid ${store.merchant}`, {
+          description: `${formatInr(store.amount)} captured · ${outcome.paymentId}. The shop is notified.`,
+        })
+        return
+      }
+
+      if (outcome.status === 'cancelled') {
+        toast.info('Payment cancelled', {
+          description: `${store.merchant} is still open on your khata.`,
+        })
+        return
+      }
+
+      toast.error('Payment failed', {
+        description: outcome.message,
+      })
+    } catch (error) {
+      toast.error('Payment failed', {
+        description: error instanceof Error ? error.message : 'Could not start checkout.',
+      })
+    } finally {
+      setBusyStore(null)
+    }
+  }
+
   return (
     <div className="grid items-start gap-12 lg:grid-cols-2">
       <div>
@@ -34,7 +97,7 @@ export function CustomerSettlementPage() {
           {formatInr(state.wallet.outstanding)}
         </h1>
         <p className="mt-4 max-w-md text-sm text-muted-foreground">
-          Pay each shop separately. Uncleared dues still auto-clear on{' '}
+          Pay each shop with Razorpay before the khata clears. Uncleared dues still auto-clear on{' '}
           <span className="text-foreground">{state.settlement.dateLabel}</span>.
         </p>
       </div>
@@ -59,22 +122,58 @@ export function CustomerSettlementPage() {
               </div>
               <Button
                 className="mt-5 w-full"
-                disabled={busyStore === store.merchant}
+                disabled={busyStore !== null}
                 onClick={() => {
-                  setBusyStore(store.merchant)
-                  settleStore(store.merchant)
-                  toast.success(`Settled ${store.merchant}`, {
-                    description: `${formatInr(store.amount)} cleared. The shop is notified.`,
-                  })
-                  window.setTimeout(() => setBusyStore(null), 400)
+                  void payAndSettle(store)
                 }}
               >
-                Settle {store.merchant}
+                Pay & settle {store.merchant}
               </Button>
             </article>
           ))
         )}
       </section>
+
+      <Dialog
+        open={demoPay !== null}
+        onOpenChange={(open) => {
+          if (!open) closeDemoPay({ status: 'cancelled' })
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Test Razorpay checkout</DialogTitle>
+            <DialogDescription>
+              Add <code className="text-foreground">VITE_RAZORPAY_KEY_ID</code> for live Razorpay. This demo
+              captures the same amount without a Key Secret.
+            </DialogDescription>
+          </DialogHeader>
+          {demoPay ? (
+            <div className="mt-4 space-y-4">
+              <p className="font-display text-3xl text-foreground">{formatInr(demoPay.amountInr)}</p>
+              <p className="text-sm text-muted-foreground">
+                Paying {demoPay.merchant} as {demoPay.customerName}.
+              </p>
+              <div className="grid gap-2">
+                <Button
+                  onClick={() =>
+                    closeDemoPay({
+                      status: 'paid',
+                      provider: 'razorpay',
+                      paymentId: `pay_demo_${demoPay.amountPaise}`,
+                    })
+                  }
+                >
+                  Complete test payment
+                </Button>
+                <Button variant="ghost" onClick={() => closeDemoPay({ status: 'cancelled' })}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CameraPackReader } from './CameraPackReader'
-import { readPackText } from '@/lib/recognizePack'
+import { readPackLabel } from '@/lib/recognizePack'
 
 vi.mock('@/lib/recognizePack', () => ({
-  readPackText: vi.fn(),
+  readPackLabel: vi.fn(),
 }))
 
-const mockedRead = vi.mocked(readPackText)
+const mockedRead = vi.mocked(readPackLabel)
 
 describe('CameraPackReader', () => {
   beforeEach(() => {
@@ -41,5 +41,19 @@ describe('CameraPackReader', () => {
     fireEvent.change(screen.getByLabelText(/upload pack photo/i), { target: { files: [file] } })
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not read a product name/i)
+  })
+
+  it('sends the uploaded filename so catalog sample photos skip OCR', async () => {
+    mockedRead.mockResolvedValue('MAGGI 2 MINUTE NOODLES')
+    const onRead = vi.fn()
+    render(<CameraPackReader onRead={onRead} />)
+
+    const file = new File(['img'], '03-maggi.png', { type: 'image/png' })
+    fireEvent.change(screen.getByLabelText(/upload pack photo/i), { target: { files: [file] } })
+
+    await waitFor(() => {
+      expect(mockedRead).toHaveBeenCalledWith(expect.any(String), { name: '03-maggi.png' })
+      expect(onRead).toHaveBeenCalledWith('MAGGI 2 MINUTE NOODLES')
+    })
   })
 })

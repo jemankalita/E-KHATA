@@ -14,6 +14,7 @@ import { ledgerSpark } from '@/lib/moneyGraph'
 import { isOverdue } from '@/lib/payBy'
 import type { RfidTap } from '@/lib/rfid'
 import { formatInr } from '@/lib/utils'
+import { unlockVoicePlayback } from '@/lib/voice'
 import { motion } from 'framer-motion'
 import { BookOpen, Package, QrCode, Radio } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -82,14 +83,24 @@ export function CustomerDashboardPage() {
           </p>
         </div>
 
-        <Button size="lg" className="h-14 w-full justify-start gap-3" onClick={() => navigate('/customer/scan')}>
+        <Button
+          size="lg"
+          className="h-14 w-full justify-start gap-3"
+          onClick={() => {
+            unlockVoicePlayback()
+            navigate('/customer/scan')
+          }}
+        >
           <Package className="size-5" /> Scan a pack
         </Button>
         <Button
           size="lg"
           variant="secondary"
           className="h-14 w-full justify-start gap-3"
-          onClick={() => navigate('/customer/scan?mode=qr')}
+          onClick={() => {
+            unlockVoicePlayback()
+            navigate('/customer/scan?mode=qr')
+          }}
         >
           <QrCode className="size-5" /> Scan a QR bill
         </Button>

@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli'
+import { NATIVE_ALLOW_NAVIGATION } from './src/lib/runtimeConfig'
 
 const config: CapacitorConfig = {
   appId: 'app.ekhata.placeholder',
@@ -7,6 +8,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     hostname: 'localhost',
+    allowNavigation: [...NATIVE_ALLOW_NAVIGATION],
   },
   android: {
     allowMixedContent: false,

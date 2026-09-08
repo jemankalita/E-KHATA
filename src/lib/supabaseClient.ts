@@ -1,16 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { resolveSupabaseConfig } from './runtimeConfig'
 
 let client: SupabaseClient | null | undefined
 
 export function getSupabase(): SupabaseClient | null {
   if (client !== undefined) return client
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-  if (!url || !key) {
+  const { url, anonKey, configured } = resolveSupabaseConfig(import.meta.env)
+  if (!configured) {
     client = null
     return client
   }
-  client = createClient(url, key, {
+  client = createClient(url, anonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -22,5 +22,5 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 export function isSupabaseConfigured() {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+  return resolveSupabaseConfig(import.meta.env).configured
 }

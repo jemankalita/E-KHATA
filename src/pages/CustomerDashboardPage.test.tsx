@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEMO_RFID_UID } from '@/lib/rfid'
 import { CustomerDashboardPage } from './CustomerDashboardPage'
+import { unlockVoicePlayback } from '@/lib/voice'
 
 const addRfidFare = vi.hoisted(() => vi.fn())
 
@@ -42,6 +43,10 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }))
 
+vi.mock('@/lib/voice', () => ({
+  unlockVoicePlayback: vi.fn(),
+}))
+
 function renderDashboard() {
   return render(
     <MemoryRouter>
@@ -51,6 +56,17 @@ function renderDashboard() {
 }
 
 describe('CustomerDashboardPage RFID', () => {
+  beforeEach(() => {
+    vi.mocked(unlockVoicePlayback).mockClear()
+  })
+
+  it('unlocks Hindi voice before opening the in-page QR scanner', async () => {
+    const user = userEvent.setup()
+    renderDashboard()
+    await user.click(screen.getByRole('button', { name: /scan a qr bill/i }))
+    expect(unlockVoicePlayback).toHaveBeenCalled()
+  })
+
   it('starts listening for RFID automatically', () => {
     renderDashboard()
     expect(screen.getByText(/listening for rfid/i)).toBeInTheDocument()

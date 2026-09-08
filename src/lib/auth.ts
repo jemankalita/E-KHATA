@@ -47,7 +47,7 @@ export interface GoogleAuthClient {
     signInWithOAuth(args: {
       provider: 'google'
       options: ReturnType<typeof googleOAuthOptions>
-    }): Promise<{ error: { message: string } | null }>
+    }): Promise<{ data?: { url?: string | null }; error: { message: string } | null }>
   }
 }
 
@@ -73,9 +73,10 @@ export function authCallbackUrl(origin: string) {
   return `${origin}${AUTH_CALLBACK_PATH}`
 }
 
-export function googleOAuthOptions(origin: string) {
+export function googleOAuthOptions(origin: string, options?: { stayInApp?: boolean }) {
   return {
     redirectTo: authCallbackUrl(origin),
+    ...(options?.stayInApp ? { skipBrowserRedirect: true } : {}),
   }
 }
 
@@ -224,15 +225,23 @@ export async function startGoogleSignIn(input: {
   storage: Storage
   origin: string
   role: Role
+  stayInApp?: boolean
+  assignUrl?: (url: string) => void
 }) {
   if (!input.client) {
     throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
   }
   resetGoogleCallbackInFlight()
   rememberIntendedRole(input.storage, input.role)
-  const { error } = await input.client.auth.signInWithOAuth({
+  const { data, error } = await input.client.auth.signInWithOAuth({
     provider: 'google',
-    options: googleOAuthOptions(input.origin),
+    options: googleOAuthOptions(input.origin, { stayInApp: input.stayInApp }),
   })
   if (error) throw new Error(error.message)
+  if (input.stayInApp) {
+    if (!data?.url) {
+      throw new Error('Google sign-in did not return a sign-in URL. Try again.')
+    }
+    ;(input.assignUrl ?? ((url: string) => window.location.assign(url)))(data.url)
+  }
 }

@@ -1,4 +1,4 @@
-import { readPackText } from '@/lib/recognizePack'
+import { readPackLabel } from '@/lib/recognizePack'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 interface CameraPackReaderProps {
@@ -53,8 +53,8 @@ export function CameraPackReader({ onRead }: CameraPackReaderProps) {
     }
   }, [])
 
-  async function emitFromImage(source: string) {
-    const text = await readPackText(source)
+  async function emitFromImage(source: string, fileName?: string) {
+    const text = await readPackLabel(source, fileName ? { name: fileName } : undefined)
     if (text) {
       onReadRef.current(text)
       return
@@ -100,7 +100,7 @@ export function CameraPackReader({ onRead }: CameraPackReaderProps) {
     setNotice(null)
     const url = URL.createObjectURL(file)
     try {
-      await emitFromImage(url)
+      await emitFromImage(url, file.name)
     } catch {
       setNotice({ text: 'Could not read that photo. Try another pack image.', tone: 'alert' })
     } finally {

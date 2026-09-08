@@ -1,4 +1,5 @@
 import { decodeQrFromFile, decodeQrFromVideoFrame } from '@/lib/decodeQr'
+import { unlockVoicePlayback } from '@/lib/voice'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 interface CameraQrReaderProps {
@@ -62,12 +63,14 @@ export function CameraQrReader({ onRead }: CameraQrReaderProps) {
               if (stopped) return
               const value = codes[0]?.rawValue
               if (value) {
+                unlockVoicePlayback()
                 onReadRef.current(value)
                 return
               }
             }
             const fromPixels = decodeQrFromVideoFrame(video)
             if (fromPixels) {
+              unlockVoicePlayback()
               onReadRef.current(fromPixels)
               return
             }
@@ -102,6 +105,7 @@ export function CameraQrReader({ onRead }: CameraQrReaderProps) {
       setNotice({ text: 'Choose a photo of the shop QR.', tone: 'alert' })
       return
     }
+    unlockVoicePlayback()
     setBusy(true)
     setNotice(null)
     try {
@@ -119,7 +123,7 @@ export function CameraQrReader({ onRead }: CameraQrReaderProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-[28px] bg-card">
+    <div className="overflow-hidden rounded-[28px] bg-card" onPointerDown={() => unlockVoicePlayback()}>
       <video
         ref={videoRef}
         className="aspect-square w-full bg-black object-cover"

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useKhata } from '@/hooks/useKhata'
 import { fetchLiveQr } from '@/lib/liveQr'
 import { formatPayBy } from '@/lib/payBy'
-import { playConfirmation } from '@/lib/voice'
+import { playConfirmation, unlockVoicePlayback } from '@/lib/voice'
 import { motion } from 'framer-motion'
 import { Check, Loader } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -25,6 +25,7 @@ export function ShopkeeperQrPage() {
         }
         if (live?.status === 'confirmed' && !posted.current) {
           posted.current = true
+          unlockVoicePlayback()
           applyScannedQr(live)
           toast.success('Customer scanned', { description: 'This bill is now on your account.' })
         }
@@ -85,6 +86,7 @@ export function ShopkeeperQrPage() {
             className="mt-5"
             variant="secondary"
             onClick={() => {
+              unlockVoicePlayback()
               const tx = confirmFromMerchant()
               toast.success('Added to account')
               if (tx) void playConfirmation(tx.amount, false)
