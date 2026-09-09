@@ -27,6 +27,14 @@ export function isKhataState(value: unknown): value is KhataState {
   )
 }
 
+export function withLedgerDefaults(state: KhataState): KhataState {
+  return {
+    ...state,
+    notices: Array.isArray(state.notices) ? state.notices : [],
+    ledgerEvents: Array.isArray(state.ledgerEvents) ? state.ledgerEvents : [],
+  }
+}
+
 function openingSettlement(now: Date) {
   const due = new Date(payByFromPreset('30d', now))
   return {
@@ -63,6 +71,7 @@ export function emptyKhataState(profile: { role: Role; displayName: string }, no
     transactions: [],
     pendingQr: null,
     notices: [],
+    ledgerEvents: [],
     shopkeeperRecent: [],
     nextSequence: 1,
   }
@@ -79,7 +88,7 @@ export async function loadKhataState(client: KhataRemoteClient, userId: string) 
   if (!isKhataState(result.data.state)) {
     throw new Error('Saved khata data looks incomplete. Reset the demo or sign in again.')
   }
-  return result.data.state
+  return withLedgerDefaults(result.data.state)
 }
 
 export async function saveKhataState(client: KhataRemoteClient, userId: string, state: KhataState) {

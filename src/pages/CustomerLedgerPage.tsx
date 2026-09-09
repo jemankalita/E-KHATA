@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { remainingOnBill } from '@/lib/creditScore/fromKhataState'
 import { useKhata } from '@/hooks/useKhata'
 import { formatDateTime, formatInr } from '@/lib/utils'
 import { formatPayBy } from '@/lib/payBy'
@@ -16,13 +17,17 @@ import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 export function CustomerLedgerPage() {
-  const { state } = useKhata()
+  const { state, disputeBill } = useKhata()
   const location = useLocation()
   const requested = (location.state as { openId?: string } | null)?.openId
   const [openId, setOpenId] = useState<string | null>(requested ?? null)
 
-  const openTxs = state.transactions.filter((tx) => !tx.settled && tx.customerName === state.customer.name)
-  const settledTxs = state.transactions.filter((tx) => tx.settled && tx.customerName === state.customer.name)
+  const openTxs = state.transactions.filter(
+    (tx) => remainingOnBill(tx) > 0 && tx.customerName === state.customer.name,
+  )
+  const settledTxs = state.transactions.filter(
+    (tx) => remainingOnBill(tx) <= 0 && tx.customerName === state.customer.name,
+  )
   const selected = state.transactions.find((tx) => tx.id === openId) ?? null
 
   const groups = useMemo(() => groupByDay([...openTxs]), [openTxs])
@@ -88,13 +93,19 @@ export function CustomerLedgerPage() {
       ) : null}
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setOpenId(null)}>
-        {selected ? <LedgerDetail transaction={selected} /> : null}
+        {selected ? <LedgerDetail transaction={selected} onDispute={disputeBill} /> : null}
       </Dialog>
     </div>
   )
 }
 
-function LedgerDetail({ transaction }: { transaction: Transaction }) {
+function LedgerDetail({
+  transaction,
+  onDispute,
+}: {
+  transaction: Transaction
+  onDispute: (id: string, note: string) => void
+}) {
   return (
     <DialogContent>
       <DialogHeader>
@@ -109,6 +120,7 @@ function LedgerDetail({ transaction }: { transaction: Transaction }) {
           value={transaction.items.map((item) => `${item.name} × ${item.quantity}`).join(', ')}
         />
         <Detail label="Amount" value={formatInr(transaction.amount)} />
+        <Detail label="Paid" value={formatInr(transaction.amountPaid ?? 0)} />
         <Detail label="Pay by" value={formatPayBy(transaction.payBy)} />
         <Detail label="Timestamp" value={formatDateTime(transaction.timestamp)} />
         <Detail label="Transaction source" value={transaction.source} />
@@ -119,6 +131,13 @@ function LedgerDetail({ transaction }: { transaction: Transaction }) {
           <VerificationPanel verification={transaction.verification} />
         </div>
       ) : null}
+      <button
+        type="button"
+        className="mt-5 w-full rounded-full bg-secondary px-4 py-3 text-sm text-secondary-foreground"
+        onClick={() => onDispute(transaction.id, 'Customer flagged this bill')}
+      >
+        {transaction.disputed ? 'Already disputed' : 'Dispute this bill'}
+      </button>
     </DialogContent>
   )
 }

@@ -1,3 +1,4 @@
+import { CreditScorePanel } from '@/components/CreditScorePanel'
 import { WalletCard } from '@/components/WalletCard'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,6 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { useAutomaticRfid } from '@/hooks/useAutomaticRfid'
 import { useKhata } from '@/hooks/useKhata'
+import { creditReportFor } from '@/lib/creditScore'
+import { remainingOnBill } from '@/lib/creditScore/fromKhataState'
 import { soonestPayBy } from '@/lib/customerBalances'
 import { ledgerSpark } from '@/lib/moneyGraph'
 import { isOverdue } from '@/lib/payBy'
@@ -28,13 +31,13 @@ export function CustomerDashboardPage() {
   const listenerRef = useRef<HTMLDivElement>(null)
 
   const mine = useMemo(
-    () => state.transactions.filter((tx) => tx.customerName === state.customer.name && !tx.settled),
+    () => state.transactions.filter((tx) => tx.customerName === state.customer.name && remainingOnBill(tx) > 0),
     [state.customer.name, state.transactions],
   )
   const due = soonestPayBy(mine)
   const overdue = due ? isOverdue(due) : false
-  const qrTotal = mine.filter((tx) => tx.source === 'QR').reduce((sum, tx) => sum + tx.amount, 0)
-  const rfidTotal = mine.filter((tx) => tx.source === 'RFID').reduce((sum, tx) => sum + tx.amount, 0)
+  const qrTotal = mine.filter((tx) => tx.source === 'QR').reduce((sum, tx) => sum + remainingOnBill(tx), 0)
+  const rfidTotal = mine.filter((tx) => tx.source === 'RFID').reduce((sum, tx) => sum + remainingOnBill(tx), 0)
   const chart = ledgerSpark(state.wallet.carriedForward, mine)
 
   const onCard = useCallback(
@@ -52,13 +55,16 @@ export function CustomerDashboardPage() {
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1.45fr_0.9fr]">
+      <div className="grid gap-4">
+      <CreditScorePanel report={creditReportFor(state, state.customer.name, state.merchant.name)} />
       <WalletCard
         outstanding={state.wallet.outstanding}
         nextSettlement={state.wallet.nextSettlement}
         series={chart.values}
         labels={chart.labels}
-        dueNote={`${overdue ? 'Overdue. ' : ''}Due ${state.wallet.nextSettlement}. This is the running khata, not a month-end estimate.`}
+        dueNote={`${overdue ? 'Overdue. ' : ''}Due ${state.wallet.nextSettlement}. Open dues sit beside the shop score — they are not a credit product.`}
       />
+      </div>
 
       <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-3">

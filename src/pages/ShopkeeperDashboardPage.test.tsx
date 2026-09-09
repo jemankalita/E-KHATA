@@ -19,6 +19,7 @@ vi.mock('@/hooks/useKhata', () => ({
           seen: false,
         },
       ],
+      ledgerEvents: [],
       transactions: [
         {
           id: 'a',
@@ -53,7 +54,7 @@ describe('ShopkeeperDashboardPage', () => {
       </MemoryRouter>,
     )
     expect(screen.getByRole('img', { name: /outstanding over recent entries/i })).toBeInTheDocument()
-    expect(screen.getByText(/who still has to pay/i)).toBeInTheDocument()
+    expect(screen.getByText(/credit book/i)).toBeInTheDocument()
     expect(screen.getByText('Rahul Sharma')).toBeInTheDocument()
     expect(screen.getByText('Aman Verma')).toBeInTheDocument()
     expect(screen.getByText(/aman verma settled/i)).toBeInTheDocument()
