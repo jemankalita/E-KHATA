@@ -13,7 +13,9 @@ vi.mock('@/hooks/useKhata', () => ({
     addRfidFare,
     state: {
       customer: { name: 'Rahul Sharma' },
+      merchant: { name: 'Sharma Stores' },
       wallet: { outstanding: 1240, nextSettlement: '30 September 2026', carriedForward: 754 },
+      ledgerEvents: [],
       transactions: [
         {
           id: 'qr',

@@ -1,13 +1,16 @@
+import { CreditScoreBadge } from '@/components/CreditScorePanel'
+import { creditReportFor } from '@/lib/creditScore'
 import { WalletCard } from '@/components/WalletCard'
 import { Button } from '@/components/ui/button'
 import { openBalancesByCustomer } from '@/lib/customerBalances'
 import { formatPayBy, isOverdue } from '@/lib/payBy'
 import { ledgerSpark } from '@/lib/moneyGraph'
 import { useKhata } from '@/hooks/useKhata'
+import { remainingOnBill } from '@/lib/creditScore/fromKhataState'
 import { formatInr, greetingForHour } from '@/lib/utils'
 import { Camera, Plus, QrCode } from 'lucide-react'
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export function ShopkeeperDashboardPage() {
   const { state } = useKhata()
@@ -15,7 +18,7 @@ export function ShopkeeperDashboardPage() {
   const greeting = greetingForHour(new Date().getHours())
   const shopTxs = useMemo(
     () =>
-      state.transactions.filter((tx) => tx.merchant === state.merchant.name && !tx.settled),
+      state.transactions.filter((tx) => tx.merchant === state.merchant.name && remainingOnBill(tx) > 0),
     [state.merchant.name, state.transactions],
   )
   const balances = useMemo(
@@ -23,28 +26,29 @@ export function ShopkeeperDashboardPage() {
     [state.merchant.name, state.transactions],
   )
   const toCollect = balances.reduce((sum, row) => sum + row.amount, 0)
-  const opening = Math.max(0, toCollect - shopTxs.reduce((sum, tx) => sum + tx.amount, 0))
+  const opening = Math.max(0, toCollect - shopTxs.reduce((sum, tx) => sum + remainingOnBill(tx), 0))
   const chart = ledgerSpark(opening, shopTxs)
   const notices = state.notices.filter((notice) => notice.kind === 'settled' || notice.kind === 'auto').slice(0, 3)
   const dueCount = balances.filter((row) => row.payBy && isOverdue(row.payBy)).length
   const pending = shopTxs.filter((tx) => tx.status === 'pending').length
+  const scoredCount = balances.filter(
+    (row) => creditReportFor(state, row.customerName, state.merchant.name).status === 'scored',
+  ).length
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1.45fr_0.9fr]">
       <div className="grid gap-4">
         <WalletCard
-          title="To collect"
+          title="Open on the book"
           outstanding={toCollect}
           nextSettlement={state.wallet.nextSettlement}
           series={chart.values}
           labels={chart.labels}
-          dueNote={`${balances.length} ${balances.length === 1 ? 'customer' : 'customers'} with open dues${dueCount > 0 ? ` · ${dueCount} overdue` : ''}. This is the live shop khata.`}
+          dueNote={`${scoredCount} scored file${scoredCount === 1 ? '' : 's'} · ${balances.length} still owing${dueCount > 0 ? ` · ${dueCount} overdue` : ''}. Dues fund the score; they are not a credit line.`}
         />
 
         <section>
-          <h2 className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-            Who still has to pay
-          </h2>
+          <h2 className="mb-3 font-display text-2xl text-foreground">Credit book</h2>
           {balances.length === 0 ? (
             <p className="rounded-[24px] bg-card px-4 py-8 text-center text-sm text-muted-foreground">
               No open customer balances. Everyone is clear.
@@ -53,20 +57,24 @@ export function ShopkeeperDashboardPage() {
             <ul className="space-y-2">
               {balances.map((row) => {
                 const overdue = row.payBy ? isOverdue(row.payBy) : false
+                const report = creditReportFor(state, row.customerName, state.merchant.name)
                 return (
-                  <li
-                    key={row.customerName}
-                    className="flex items-center justify-between gap-4 rounded-[24px] bg-card px-4 py-4"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-foreground">{row.customerName}</p>
-                      <p className={`text-sm ${overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        {row.payBy ? formatPayBy(row.payBy) : 'No pay-by date'}
+                  <li key={row.customerName}>
+                    <Link
+                      to={`/shopkeeper/credit?customer=${encodeURIComponent(row.customerName)}`}
+                      className="flex items-center justify-between gap-4 rounded-[24px] bg-card px-4 py-4 hover:bg-secondary"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-foreground">{row.customerName}</p>
+                        <p className={`text-sm ${overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {row.payBy ? formatPayBy(row.payBy) : 'No pay-by date'}
+                        </p>
+                        <CreditScoreBadge className="mt-2" report={report} />
+                      </div>
+                      <p className="shrink-0 font-display text-2xl tabular-nums text-foreground">
+                        {formatInr(row.amount)}
                       </p>
-                    </div>
-                    <p className="shrink-0 font-display text-2xl tabular-nums text-foreground">
-                      {formatInr(row.amount)}
-                    </p>
+                    </Link>
                   </li>
                 )
               })}
@@ -80,6 +88,10 @@ export function ShopkeeperDashboardPage() {
         <h1 className="font-display text-4xl leading-[1.05] text-foreground sm:text-5xl">
           {state.merchant.name}
         </h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          This counter writes the neighbourhood credit file. Post bills as usual. The score is what a partner
+          would license — not what you lend.
+        </p>
 
         <div className="grid grid-cols-2 gap-3">
           <SummaryTile label="Open bills" value={String(shopTxs.length)} tag="On khata" />
@@ -97,7 +109,7 @@ export function ShopkeeperDashboardPage() {
           </section>
         ) : (
           <p className="rounded-[20px] bg-card px-4 py-4 text-sm text-muted-foreground">
-            Settlements land here as customers clear their khata.
+            Confirmed repayments land here. Auto-settles do not lift a score.
           </p>
         )}
 

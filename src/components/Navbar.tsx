@@ -18,7 +18,7 @@ export function SiteHeader() {
 
   const links = isShop
     ? [
-        { to: '/shopkeeper', label: 'Home' },
+        { to: '/shopkeeper', label: 'Book' },
         { to: '/shopkeeper/create', label: 'New bill' },
         { to: '/shopkeeper/upload', label: 'Scan' },
         { to: '/shopkeeper/qr', label: 'QR' },

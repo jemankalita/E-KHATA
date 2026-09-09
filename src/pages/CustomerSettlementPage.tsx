@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useKhata } from '@/hooks/useKhata'
+import { remainingOnBill } from '@/lib/creditScore/fromKhataState'
 import { formatPayBy } from '@/lib/payBy'
 import { openSettlementCheckout, type SettlementPaymentOutcome } from '@/lib/razorpayCheckout'
 import { buildSettlementPayment, type SettlementPaymentRequest } from '@/lib/settlementPayment'
@@ -15,13 +17,15 @@ import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 export function CustomerSettlementPage() {
-  const { state, settleStore } = useKhata()
+  const { state, settleStore, payStore } = useKhata()
   const [busyStore, setBusyStore] = useState<string | null>(null)
   const [demoPay, setDemoPay] = useState<SettlementPaymentRequest | null>(null)
   const demoResolve = useRef<((outcome: SettlementPaymentOutcome) => void) | null>(null)
 
   const stores = useMemo(() => {
-    const open = state.transactions.filter((tx) => !tx.settled && tx.customerName === state.customer.name)
+    const open = state.transactions.filter(
+      (tx) => remainingOnBill(tx) > 0 && tx.customerName === state.customer.name,
+    )
     const map = new Map<string, { merchant: string; amount: number; entries: number; payBy: string }>()
     for (const tx of open) {
       const current = map.get(tx.merchant) ?? { merchant: tx.merchant, amount: 0, entries: 0, payBy: tx.payBy }
@@ -29,7 +33,7 @@ export function CustomerSettlementPage() {
         tx.payBy && (!current.payBy || Date.parse(tx.payBy) < Date.parse(current.payBy)) ? tx.payBy : current.payBy
       map.set(tx.merchant, {
         merchant: tx.merchant,
-        amount: current.amount + tx.amount,
+        amount: current.amount + remainingOnBill(tx),
         entries: current.entries + 1,
         payBy,
       })
@@ -45,14 +49,15 @@ export function CustomerSettlementPage() {
     resolve(outcome)
   }
 
-  const payAndSettle = async (store: { merchant: string; amount: number }) => {
+  const payAndSettle = async (store: { merchant: string; amount: number }, paying: number) => {
     if (busyStore !== null) return
+    const amountInr = Math.min(store.amount, Math.max(1, Math.round(paying)))
     setBusyStore(store.merchant)
     try {
       const request = buildSettlementPayment({
         merchant: store.merchant,
         customerName: state.customer.name,
-        amountInr: store.amount,
+        amountInr,
       })
       const outcome = await openSettlementCheckout(request, {
         openDemoCheckout: (pending) =>
@@ -63,9 +68,10 @@ export function CustomerSettlementPage() {
       })
 
       if (outcome.status === 'paid') {
-        settleStore(store.merchant)
+        if (amountInr >= store.amount) settleStore(store.merchant)
+        else payStore(store.merchant, amountInr)
         toast.success(`Paid ${store.merchant}`, {
-          description: `${formatInr(store.amount)} captured · ${outcome.paymentId}. The shop is notified.`,
+          description: `${formatInr(amountInr)} captured · ${outcome.paymentId}. The shop is notified.`,
         })
         return
       }
@@ -97,8 +103,8 @@ export function CustomerSettlementPage() {
           {formatInr(state.wallet.outstanding)}
         </h1>
         <p className="mt-4 max-w-md text-sm text-muted-foreground">
-          Pay each shop with Razorpay before the khata clears. Uncleared dues still auto-clear on{' '}
-          <span className="text-foreground">{state.settlement.dateLabel}</span>.
+          Pay each shop before the khata clears. Confirmed payments write your score; auto-clear on{' '}
+          <span className="text-foreground">{state.settlement.dateLabel}</span> does not.
         </p>
       </div>
 
@@ -109,27 +115,14 @@ export function CustomerSettlementPage() {
           </p>
         ) : (
           stores.map((store) => (
-            <article key={store.merchant} className="rounded-[28px] bg-card p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
-                    {store.entries} {store.entries === 1 ? 'entry' : 'entries'}
-                  </p>
-                  <h2 className="mt-1 font-display text-2xl text-foreground">{store.merchant}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{formatPayBy(store.payBy)}</p>
-                </div>
-                <p className="font-display text-2xl text-primary">{formatInr(store.amount)}</p>
-              </div>
-              <Button
-                className="mt-5 w-full"
-                disabled={busyStore !== null}
-                onClick={() => {
-                  void payAndSettle(store)
-                }}
-              >
-                Pay & settle {store.merchant}
-              </Button>
-            </article>
+            <StorePayCard
+              key={store.merchant}
+              store={store}
+              busy={busyStore !== null}
+              onPay={(amount) => {
+                void payAndSettle(store, amount)
+              }}
+            />
           ))
         )}
       </section>
@@ -175,5 +168,48 @@ export function CustomerSettlementPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function StorePayCard({
+  store,
+  busy,
+  onPay,
+}: {
+  store: { merchant: string; amount: number; entries: number; payBy: string }
+  busy: boolean
+  onPay: (amount: number) => void
+}) {
+  const [amount, setAmount] = useState(String(store.amount))
+  return (
+    <article className="rounded-[28px] bg-card p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
+            {store.entries} {store.entries === 1 ? 'entry' : 'entries'}
+          </p>
+          <h2 className="mt-1 font-display text-2xl text-foreground">{store.merchant}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{formatPayBy(store.payBy)}</p>
+        </div>
+        <p className="font-display text-2xl text-primary">{formatInr(store.amount)}</p>
+      </div>
+      <label className="mt-4 block text-xs text-muted-foreground">
+        Amount to pay (partial allowed)
+        <Input
+          className="mt-2"
+          inputMode="numeric"
+          aria-label={`Amount to pay ${store.merchant}`}
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+        />
+      </label>
+      <Button
+        className="mt-5 w-full"
+        disabled={busy}
+        onClick={() => onPay(Number(amount))}
+      >
+        Pay & settle {store.merchant}
+      </Button>
+    </article>
   )
 }

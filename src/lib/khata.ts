@@ -38,6 +38,7 @@ export function addToKhata(
     timestamp: new Date().toISOString(),
     voicePlayed: false,
     settlementState: 'open',
+    amountPaid: 0,
   }
 
   const nextCustomers = customers.map((entry) =>
@@ -57,18 +58,21 @@ export function settleCustomer(
   customers: Customer[],
   transactions: Transaction[],
   customerId: string,
+  options: { source?: 'customer' | 'auto'; at?: Date } = {},
 ): { customers: Customer[]; transactions: Transaction[]; settledAmount: number } {
+  const at = (options.at ?? new Date()).toISOString()
+  const source = options.source ?? 'customer'
   const open = transactions.filter(
     (tx) => tx.customerId === customerId && tx.settlementState === 'open',
   )
-  const settledAmount = open.reduce((sum, tx) => sum + tx.amount, 0)
+  const settledAmount = open.reduce((sum, tx) => sum + tx.amount - (tx.amountPaid ?? 0), 0)
 
   const nextCustomers = customers.map((entry) =>
     entry.id === customerId
       ? {
           ...entry,
           currentBalance: 0,
-          lastSettlementDate: new Date().toISOString(),
+          lastSettlementDate: at,
           nextSettlementDate: nextMonthIso(),
         }
       : entry,
@@ -76,7 +80,14 @@ export function settleCustomer(
 
   const nextTransactions = transactions.map((tx) =>
     tx.customerId === customerId && tx.settlementState === 'open'
-      ? { ...tx, settlementState: 'settled' as const, status: 'settled' as const }
+      ? {
+          ...tx,
+          settlementState: 'settled' as const,
+          status: 'settled' as const,
+          amountPaid: tx.amount,
+          settledAt: at,
+          settlementSource: source,
+        }
       : tx,
   )
 
@@ -99,7 +110,10 @@ export function autoSettleDue(
 
   return dueIds.reduce(
     (state, customerId) => {
-      const next = settleCustomer(state.customers, state.transactions, customerId)
+      const next = settleCustomer(state.customers, state.transactions, customerId, {
+        source: 'auto',
+        at: now,
+      })
       return {
         customers: next.customers,
         transactions: next.transactions,

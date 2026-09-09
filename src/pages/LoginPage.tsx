@@ -131,27 +131,27 @@ export function LoginPage() {
             animate={intro.animate}
             transition={{ duration: motionTokens.duration.slow, ease: motionTokens.easing.smooth }}
           >
-            <p className={`text-[12px] uppercase tracking-[0.22em] ${mute}`}>Traditional credit · one shared ledger</p>
             <h1 className={`font-display mt-5 max-w-xl text-balance text-5xl leading-[0.92] md:text-6xl ${ink}`}>
-              Simplify your khata
+              The khata is the credit file
             </h1>
             <p className={`mt-5 max-w-md text-pretty text-[16px] leading-relaxed ${mute}`}>
-              One running account for shopkeeper and customer. The bill is posted once, both sides see the
-              same rupees, and the due date clears it.
+              UPI already owns the pay rail. E-Khata turns the trust a kirana already extends — bills,
+              days to settle, partials, disputes — into an explainable score partners can query. No loan.
+              No limit. The file first.
             </p>
           </motion.div>
           <ol className={`mt-8 space-y-4 text-[15px] leading-relaxed ${mute}`}>
             <li>
-              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">1 · Post</span>
-              The shopkeeper photographs a slip or raises a counter QR. That line is the khata.
+              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">Post</span>
+              The shop writes every basket to the running account. That line is history, not a one-off QR pay.
             </li>
             <li>
-              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">2 · Share</span>
-              The customer opens the same record — amount, note, and due date, not a reconstructed total.
+              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">Repay</span>
+              The customer clears some or all of it. Auto-close on the due date does not count as trust.
             </li>
             <li>
-              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">3 · Settle</span>
-              When the date arrives the balance is clear. Nothing waits for month-end arithmetic.
+              <span className="block text-[11px] tracking-[0.18em] uppercase opacity-70">Score</span>
+              Three confirmed settlements open a 300–900 file with the reasons a lender would actually read.
             </li>
           </ol>
           <LoginScanScene />
@@ -169,6 +169,7 @@ export function LoginPage() {
                   <GoogleMark /> Continue as
                 </span>
                 <span className="mt-1 block font-display text-4xl">Customer</span>
+                <span className="mt-2 block max-w-[14rem] text-[13px] opacity-70">See the score your shops already wrote.</span>
               </span>
               <ArrowRight className="mb-1 size-5" />
             </button>
@@ -183,6 +184,7 @@ export function LoginPage() {
                   <GoogleMark /> Continue as
                 </span>
                 <span className="mt-1 block font-display text-4xl">Shopkeeper</span>
+                <span className="mt-2 block max-w-[14rem] text-[13px] opacity-70">Read who is earning a file, not only who owes.</span>
               </span>
               <ArrowRight className="mb-1 size-5" />
             </button>
@@ -206,8 +208,7 @@ export function LoginPage() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-6xl px-6 pb-6 pt-28">
-        <p className={`text-[12px] uppercase tracking-[0.18em] ${mute}`}>On the counter</p>
-        <h2 className={`mt-2 font-display text-3xl md:text-4xl ${ink}`}>The khata, as both sides read it</h2>
+        <h2 className={`mt-2 font-display text-3xl md:text-4xl ${ink}`}>Same file on both phones</h2>
         <div className="mt-8 flex justify-center lg:justify-end">
           <HeroPhone />
         </div>
