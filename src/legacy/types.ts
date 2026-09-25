@@ -31,6 +31,9 @@ export interface Transaction {
   timestamp: string
   voicePlayed: boolean
   settlementState: 'open' | 'settled'
+  amountPaid?: number
+  settledAt?: string
+  settlementSource?: 'customer' | 'auto'
 }
 
 export interface BillDraft {

@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { loadEnv, type Connect, type Plugin, type PreviewServer, type ViteDevServer } from 'vite'
 import { CUSTOMERS, TRANSACTIONS } from '../src/data/seed.ts'
+import { creditScoreFromQuery } from '../src/lib/creditScore/http.ts'
 import { addToKhata, autoSettleDue, settleCustomer } from '../src/lib/khata.ts'
 import { DEFAULT_SIA_VOICE_ID } from '../src/lib/elevenLabsVoice.ts'
 import { normalizeVoiceText, requestElevenLabsAudio, VOICE_TEXT_MAX } from './elevenLabsSpeak.ts'
@@ -122,6 +123,12 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
   if (req.method === 'OPTIONS') {
     res.statusCode = 204
     res.end()
+    return
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/credit-score') {
+    const result = creditScoreFromQuery(url)
+    json(res, result.status, result.body)
     return
   }
 

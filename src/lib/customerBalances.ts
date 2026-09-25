@@ -12,12 +12,15 @@ export function openBalancesByCustomer(
     amount: number
     settled: boolean
     payBy?: string
+    amountPaid?: number
   }>,
   merchantName: string,
 ): CustomerBalance[] {
   const map = new Map<string, CustomerBalance>()
   for (const tx of transactions) {
     if (tx.settled || tx.merchant !== merchantName) continue
+    const remaining = Math.max(0, tx.amount - (tx.amountPaid ?? 0))
+    if (remaining <= 0) continue
     const current = map.get(tx.customerName) ?? {
       customerName: tx.customerName,
       amount: 0,
@@ -30,7 +33,7 @@ export function openBalancesByCustomer(
         : current.payBy
     map.set(tx.customerName, {
       customerName: tx.customerName,
-      amount: current.amount + tx.amount,
+      amount: current.amount + remaining,
       payBy,
       entries: current.entries + 1,
     })

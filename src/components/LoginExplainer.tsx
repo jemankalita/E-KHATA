@@ -5,64 +5,60 @@ import { ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export const LOGIN_SECTIONS = [
-  { id: 'how-it-works', label: 'How it works' },
+  { id: 'how-it-works', label: 'The file' },
   { id: 'customers', label: 'Customers' },
-  { id: 'shopkeepers', label: 'Shopkeepers' },
+  { id: 'shopkeepers', label: 'Shops' },
 ] as const
 
 const stories = [
   {
     id: 'how-it-works',
-    kicker: 'The shared ledger',
     title: (
       <>
-        Monitor <em className="italic">khata</em> performance
+        Neighbourhood trust, as a <em className="italic">score</em>
       </>
     ),
-    body: 'The shopkeeper posts each bill to an account. The customer sees the same line, the same due date, the same rupees. Nothing is reconstructed from a pile of slips.',
+    body: 'RuPay-on-UPI already pays with a bank card at any QR. What it cannot see is the regular who settles the kirana book. E-Khata scores that behaviour and shows every feature.',
     points: [
-      { title: 'Capture the bill', copy: 'Photograph a slip or raise a counter QR. The entry is written once.' },
-      { title: 'Same record', copy: 'Merchant and customer read one khata — not two notebooks that drift apart.' },
-      { title: 'Settle on the date', copy: 'When it is due, the balance is clear. No reconstruction from memory.' },
+      { title: 'Write the khata', copy: 'Bills still post from a photo or counter QR. The ledger is the source, not a new pay rail.' },
+      { title: 'Count real repayments', copy: 'Customer payments — full or partial — write the file. Due-date auto-close does not.' },
+      { title: 'Hand a partner the reasons', copy: 'A 300–900 score plus days-to-settle, disputes, and stability. Queryable. Not a black box.' },
     ],
   },
   {
     id: 'customers',
-    kicker: 'For the account holder',
     title: (
       <>
-        See what the shop <em className="italic">wrote</em>
+        The shops already know <em className="italic">you</em>
       </>
     ),
-    body: 'Open the selected account. Every posted bill is already there. Settlement is the due date, not a surprise total.',
+    body: 'Your score is local: this customer at this shop. Three confirmed settlements and the file opens. Until then you are a thin file, not a reject.',
     points: [
-      { title: 'Open your account', copy: 'No customer QR path — you walk into the ledger that belongs to you.' },
-      { title: 'Read every bill', copy: 'Amounts, notes, and timing sit in one place you can check.' },
-      { title: 'Clear it when due', copy: 'Pay against the same record the shopkeeper posted.' },
+      { title: 'One score per shop', copy: 'Trust does not travel blindly across town. The file is the relationship.' },
+      { title: 'You can dispute a line', copy: 'Corrections and disputes are part of the record a lender would want to see.' },
+      { title: 'Pay down, not a product', copy: 'Clearing khata is repayment behaviour. E-Khata does not issue credit in this phase.' },
     ],
   },
   {
     id: 'shopkeepers',
-    kicker: 'For the counter',
     title: (
       <>
-        Post it in a <em className="italic">snap</em>
+        Your book is the <em className="italic">underwrite</em>
       </>
     ),
-    body: 'Traditional store credit, kept as a digital khata. Photograph the bill, attach it to a customer, and keep selling.',
+    body: 'Keep selling. Each settlement is alternative data an NBFC could license later. You are not the lender. You already hold the signal.',
     points: [
-      { title: 'Raise a QR or snap a bill', copy: 'The counter does not wait for a notebook to catch up.' },
-      { title: 'One account per regular', copy: 'Each customer has a running record, not a pile of loose slips.' },
-      { title: 'Watch what is open', copy: 'Outstanding credit stays visible until the due date clears it.' },
+      { title: 'See the file next to the due', copy: 'Open balances sit beside the score so collections and underwriting share one screen.' },
+      { title: 'Correct a wrong amount', copy: 'A shopkeeper fix is a correction event, not a silent edit.' },
+      { title: 'No balance-sheet lending', copy: 'Phase 2 would sit under an NBFC. This build stops at the data line on purpose.' },
     ],
   },
 ] as const
 
-const mix = [
-  { name: 'Sharma Stores', current: 72, model: 80, tone: 'bg-[#1e1b16] dark:bg-[#d8cbb8]' },
-  { name: 'Campus Canteen', current: 48, model: 55, tone: 'bg-[#5c5348] dark:bg-[#a89b88]' },
-  { name: 'Green Mart', current: 34, model: 40, tone: 'bg-[#5f6f45] dark:bg-[#a3b084]' },
-  { name: 'Cash on hand', current: 18, model: 25, tone: 'bg-[#c4a574]' },
+const files = [
+  { name: 'Rahul Sharma', score: '831', band: 'strong' },
+  { name: 'Aman Verma', score: '—', band: 'thin file' },
+  { name: 'Priya Singh', score: '—', band: 'pending bill' },
 ] as const
 
 export function useActiveLoginSection() {
@@ -136,14 +132,13 @@ export function LoginExplainer() {
     <div className="relative z-10 mx-auto max-w-6xl space-y-28 px-6 pb-28 pt-16 text-[#071428] dark:text-white">
       <section id="how-it-works" className="scroll-mt-28 grid gap-10 lg:grid-cols-2 lg:items-end">
         <div>
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[#123056] dark:text-white/70">{stories[0].kicker}</p>
-          <h2 className="mt-4 max-w-xl font-display text-4xl leading-[0.95] text-balance md:text-6xl">{stories[0].title}</h2>
+          <h2 className="max-w-xl font-display text-4xl leading-[0.95] text-balance md:text-6xl">{stories[0].title}</h2>
           <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-[#123056] dark:text-white/70">{stories[0].body}</p>
         </div>
         <div className="landing-glass rounded-[28px] p-5">
-          <p className="text-[12px] text-[#123056] dark:text-white/50">Total outstanding</p>
-          <p className="mt-1 font-display text-4xl tabular-nums">{formatInr(HERO_PHONE_LEDGER.outstanding)}</p>
-          <p className="text-[13px] text-accent">{HERO_PHONE_LEDGER.growthLabel} this cycle</p>
+          <p className="text-[12px] text-[#123056] dark:text-white/50">Rahul Sharma · Sharma Stores</p>
+          <p className="mt-1 font-display text-5xl tabular-nums">831</p>
+          <p className="text-[13px] text-accent">strong · khata-score-v1</p>
           <svg viewBox="0 0 320 96" className="mt-4 h-24 w-full" aria-hidden="true">
             <path d={path} className="hero-phone-spark" fill="none" stroke="currentColor" strokeWidth="2.2" />
           </svg>
@@ -164,8 +159,7 @@ export function LoginExplainer() {
 
       <section id="customers" className="scroll-mt-28 grid gap-10 lg:grid-cols-2 lg:items-center">
         <div>
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[#123056] dark:text-white/70">{stories[1].kicker}</p>
-          <h2 className="mt-4 max-w-xl font-display text-4xl leading-[0.95] md:text-6xl">{stories[1].title}</h2>
+          <h2 className="max-w-xl font-display text-4xl leading-[0.95] md:text-6xl">{stories[1].title}</h2>
           <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-[#123056] dark:text-white/70">{stories[1].body}</p>
           <ul className="mt-8 space-y-3">
             {stories[1].points.map((point) => (
@@ -176,22 +170,16 @@ export function LoginExplainer() {
             ))}
           </ul>
         </div>
-        <div className="landing-glass rounded-[28px] p-6">
-          <p className="text-[12px] uppercase tracking-[0.16em] text-[#123056] dark:text-white/50">Where credit sits</p>
-          <div className="mt-6 space-y-5">
-            {mix.map((row) => (
-              <div key={row.name}>
-                <div className="mb-1.5 flex justify-between text-[13px]">
-                  <span>{row.name}</span>
-                  <span className="tabular-nums text-[#123056] dark:text-white/55">{row.current}%</span>
+        <div className="rounded-[28px] bg-[#071428] p-6 text-[#f3efe8] dark:bg-[#161618]">
+          <p className="font-display text-2xl">Sharma Stores credit book</p>
+          <div className="mt-6 space-y-4">
+            {files.map((row) => (
+              <div key={row.name} className="flex items-end justify-between gap-4 border-b border-white/10 pb-3">
+                <div>
+                  <p className="text-[15px]">{row.name}</p>
+                  <p className="text-[12px] tracking-[0.14em] text-white/50 uppercase">{row.band}</p>
                 </div>
-                <div className="relative h-2 rounded-full bg-zinc-200 dark:bg-white/10">
-                  <span className={`absolute inset-y-0 left-0 rounded-full ${row.tone}`} style={{ width: `${row.current}%` }} />
-                  <span
-                    className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-zinc-900/50 dark:bg-white/70"
-                    style={{ left: `${row.model}%` }}
-                  />
-                </div>
+                <p className="font-display text-3xl tabular-nums">{row.score}</p>
               </div>
             ))}
           </div>
@@ -199,7 +187,6 @@ export function LoginExplainer() {
       </section>
 
       <section id="shopkeepers" className="scroll-mt-28">
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[#123056] dark:text-white/70">{stories[2].kicker}</p>
           <h2 className="mt-4 max-w-3xl font-display text-4xl leading-[0.95] md:text-6xl">{stories[2].title}</h2>
           <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-[#123056] dark:text-white/70">{stories[2].body}</p>
         <ul className="mt-10 grid gap-3 md:grid-cols-3">
@@ -216,9 +203,10 @@ export function LoginExplainer() {
       </section>
 
       <section className="rounded-[32px] bg-gradient-to-b from-transparent to-black/25 px-6 py-16 text-center dark:to-black/40">
-        <h2 className="font-display text-4xl md:text-6xl">Forecast your settlement</h2>
+        <h2 className="font-display text-4xl md:text-6xl">Not a loan. A file.</h2>
         <p className="mx-auto mt-4 max-w-lg text-[16px] text-[#123056] dark:text-white/70">
-          Model the due date before it arrives. See what is open today and what clears when the cycle ends.
+          Phase 1 stops at the data line. An NBFC would have to stand behind any actual credit. Open the demo and
+          read Rahul’s 831 at Sharma Stores.
         </p>
         <a
           href="#enter"
@@ -229,13 +217,13 @@ export function LoginExplainer() {
         <div className="landing-glass mx-auto mt-10 max-w-3xl rounded-[28px] p-6 text-left">
           <div className="flex flex-wrap justify-between gap-6">
             <div>
-              <p className="text-[12px] text-[#123056] dark:text-white/50">Current outstanding</p>
+              <p className="text-[12px] text-[#123056] dark:text-white/50">Open khata</p>
               <p className="font-display text-3xl tabular-nums">{formatInr(HERO_PHONE_LEDGER.outstanding)}</p>
             </div>
             <div>
-              <p className="text-[12px] text-[#123056] dark:text-white/50">After due date</p>
-              <p className="font-display text-3xl tabular-nums">₹0</p>
-              <p className="text-[13px] text-accent">Clears on {HERO_PHONE_LEDGER.nextSettlement}</p>
+              <p className="text-[12px] text-[#123056] dark:text-white/50">Scored file</p>
+              <p className="font-display text-3xl tabular-nums">831</p>
+              <p className="text-[13px] text-accent">After 3 confirmed settlements</p>
             </div>
           </div>
         </div>

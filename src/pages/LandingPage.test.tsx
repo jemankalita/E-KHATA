@@ -44,8 +44,8 @@ describe('LoginPage', () => {
   it('offers two account paths without month-end settlement copy', () => {
     const { container } = renderLogin()
     const view = within(container)
-    expect(view.getByRole('heading', { name: /simplify your khata/i })).toBeInTheDocument()
-    expect(view.getByText(/the bill is posted once/i)).toBeInTheDocument()
+    expect(view.getByRole('heading', { name: /the khata is the credit file/i })).toBeInTheDocument()
+    expect(view.getByText(/upi already owns the pay rail/i)).toBeInTheDocument()
     expect(view.getByRole('button', { name: /continue as\s*customer/i })).toBeInTheDocument()
     expect(view.getByRole('button', { name: /continue as\s*shopkeeper/i })).toBeInTheDocument()
     expect(view.queryByText(/month end/i)).not.toBeInTheDocument()

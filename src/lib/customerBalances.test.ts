@@ -34,9 +34,11 @@ describe('openBalancesByCustomer', () => {
         },
         {
           ...INITIAL_STATE.transactions[0]!,
+          id: 'open-aman',
           customerName: 'Aman Verma',
           merchant: 'Sharma Stores',
           amount: 50,
+          amountPaid: 0,
           settled: false,
         },
       ],

@@ -9,6 +9,7 @@ import { publishLiveQr } from '@/lib/liveQr'
 import { recognizeBill, type BillRecognition } from '@/lib/ocr'
 import { payByFromPreset } from '@/lib/payBy'
 import type { RfidTap } from '@/lib/rfid'
+import { applyCustomerPayment, correctBillAmount, fileDispute } from '@/lib/ledgerOps'
 import { markNoticesSeen as markNoticesSeenState, settleKhataAll, settleStoreBills } from '@/lib/settlement'
 import { formatSequenceId } from '@/lib/utils'
 import type {
@@ -43,6 +44,7 @@ function loadState(): KhataState {
     return {
       ...parsed,
       notices: Array.isArray(parsed.notices) ? parsed.notices : [],
+      ledgerEvents: Array.isArray(parsed.ledgerEvents) ? parsed.ledgerEvents : [],
       pendingQr: parsed.pendingQr
         ? { ...parsed.pendingQr, payBy: parsed.pendingQr.payBy || payByFromPreset('7d') }
         : null,
@@ -88,6 +90,9 @@ interface KhataContextValue {
   confirmFromMerchant: () => Transaction | null
   applyScannedQr: (pending: PendingQr) => Transaction | null
   settleStore: (merchant: string) => void
+  payStore: (merchant: string, amount: number) => void
+  disputeBill: (transactionId: string, note: string) => void
+  correctBill: (transactionId: string, amount: number) => void
   settleKhata: () => void
   markNoticesSeen: (ids: string[]) => void
   ocrDraft: BillRecognition | null
@@ -232,6 +237,7 @@ export function KhataProvider({ children }: { children: ReactNode }) {
         verification: verifiedForSource('RFID', true),
         settled: false,
         payBy: payByFromPreset('today'),
+        amountPaid: 0,
       }
       created = tx
       void playConfirmation(tx.amount, false)
@@ -315,6 +321,18 @@ export function KhataProvider({ children }: { children: ReactNode }) {
     commit((prev) => settleStoreBills(prev, merchant, new Date(), prev.customer.name))
   }, [commit])
 
+  const payStore = useCallback((merchant: string, amount: number) => {
+    commit((prev) => applyCustomerPayment(prev, prev.customer.name, merchant, amount, new Date()))
+  }, [commit])
+
+  const disputeBill = useCallback((transactionId: string, note: string) => {
+    commit((prev) => fileDispute(prev, transactionId, note, new Date()))
+  }, [commit])
+
+  const correctBill = useCallback((transactionId: string, amount: number) => {
+    commit((prev) => correctBillAmount(prev, transactionId, amount, new Date()))
+  }, [commit])
+
   const runOcr = useCallback(async (imageUrl: string) => {
     setOcrBusy(true)
     try {
@@ -354,6 +372,9 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       confirmFromMerchant,
       applyScannedQr,
       settleStore,
+      payStore,
+      disputeBill,
+      correctBill,
       settleKhata,
       markNoticesSeen,
       ocrDraft,
@@ -373,6 +394,9 @@ export function KhataProvider({ children }: { children: ReactNode }) {
       confirmFromMerchant,
       applyScannedQr,
       settleStore,
+      payStore,
+      disputeBill,
+      correctBill,
       settleKhata,
       markNoticesSeen,
       ocrDraft,

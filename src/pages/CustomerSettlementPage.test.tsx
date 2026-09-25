@@ -9,6 +9,7 @@ const openSettlementCheckout = vi.hoisted(() => vi.fn())
 vi.mock('@/hooks/useKhata', () => ({
   useKhata: () => ({
     settleStore,
+    payStore: vi.fn(),
     state: {
       customer: { name: 'Rahul Sharma' },
       wallet: { outstanding: 386 },

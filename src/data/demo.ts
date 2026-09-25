@@ -3,13 +3,13 @@ import type {
   PendingQr,
   Transaction,
   TransactionItem,
-} from '@/types'
+} from '../types'
 
 export const SETTLEMENT_ISO = '2026-09-30'
 export const SETTLEMENT_LABEL = '30 September 2026'
 export const CUSTOMER_NAME = 'Rahul Sharma'
 export const MERCHANT_NAME = 'Sharma Stores'
-export const STORAGE_KEY = 'e-khata-state-v2'
+export const STORAGE_KEY = 'e-khata-state-v3'
 
 export const DEMO_QR_ITEMS: TransactionItem[] = [
   { name: 'Milk', quantity: 1, price: 32 },
@@ -33,7 +33,65 @@ const verifiedAll = {
   customerConfirmation: true,
 }
 
+const settledGrocery = {
+  category: 'Groceries' as const,
+  items: [{ name: 'Kirana basket', quantity: 1, price: 0 }],
+  source: 'QR' as const,
+  status: 'verified' as const,
+  verification: verifiedAll,
+  settled: true,
+  settlementSource: 'customer' as const,
+}
+
 export const INITIAL_TRANSACTIONS: Transaction[] = [
+  {
+    id: 'EK-2026-000360',
+    merchant: MERCHANT_NAME,
+    customerName: CUSTOMER_NAME,
+    ...settledGrocery,
+    items: [{ name: 'Kirana basket', quantity: 1, price: 400 }],
+    amount: 400,
+    amountPaid: 400,
+    timestamp: '2026-06-02T10:00:00.000Z',
+    settledAt: '2026-06-06T10:00:00.000Z',
+    payBy: '2026-06-30T18:00:00.000Z',
+  },
+  {
+    id: 'EK-2026-000365',
+    merchant: MERCHANT_NAME,
+    customerName: CUSTOMER_NAME,
+    ...settledGrocery,
+    items: [{ name: 'Kirana basket', quantity: 1, price: 350 }],
+    amount: 350,
+    amountPaid: 350,
+    timestamp: '2026-07-04T10:00:00.000Z',
+    settledAt: '2026-07-10T10:00:00.000Z',
+    payBy: '2026-07-31T18:00:00.000Z',
+  },
+  {
+    id: 'EK-2026-000370',
+    merchant: MERCHANT_NAME,
+    customerName: CUSTOMER_NAME,
+    ...settledGrocery,
+    items: [{ name: 'Kirana basket', quantity: 1, price: 280 }],
+    amount: 280,
+    amountPaid: 280,
+    timestamp: '2026-08-03T10:00:00.000Z',
+    settledAt: '2026-08-08T10:00:00.000Z',
+    payBy: '2026-08-31T18:00:00.000Z',
+  },
+  {
+    id: 'EK-2026-000350',
+    merchant: MERCHANT_NAME,
+    customerName: 'Aman Verma',
+    ...settledGrocery,
+    items: [{ name: 'Rice', quantity: 1, price: 180 }],
+    amount: 180,
+    amountPaid: 180,
+    timestamp: '2026-08-01T11:00:00.000Z',
+    settledAt: '2026-08-20T11:00:00.000Z',
+    payBy: '2026-08-31T18:00:00.000Z',
+  },
   {
     id: 'EK-2026-000378',
     merchant: MERCHANT_NAME,
@@ -112,10 +170,9 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   },
 ]
 
-const listedInitial = INITIAL_TRANSACTIONS.filter((tx) => tx.customerName === CUSTOMER_NAME).reduce(
-  (sum, tx) => sum + tx.amount,
-  0,
-)
+const listedInitial = INITIAL_TRANSACTIONS.filter(
+  (tx) => tx.customerName === CUSTOMER_NAME && !tx.settled,
+).reduce((sum, tx) => sum + tx.amount, 0)
 
 export const INITIAL_STATE: KhataState = {
   customer: { name: CUSTOMER_NAME },
@@ -137,6 +194,52 @@ export const INITIAL_STATE: KhataState = {
   },
   transactions: INITIAL_TRANSACTIONS,
   pendingQr: null,
+  ledgerEvents: [
+    {
+      id: 'pay-360',
+      kind: 'payment',
+      customerName: CUSTOMER_NAME,
+      merchant: MERCHANT_NAME,
+      timestamp: '2026-06-06T10:00:00.000Z',
+      source: 'customer',
+      transactionIds: ['EK-2026-000360'],
+      amount: 400,
+      paymentKind: 'full',
+    },
+    {
+      id: 'pay-365',
+      kind: 'payment',
+      customerName: CUSTOMER_NAME,
+      merchant: MERCHANT_NAME,
+      timestamp: '2026-07-10T10:00:00.000Z',
+      source: 'customer',
+      transactionIds: ['EK-2026-000365'],
+      amount: 350,
+      paymentKind: 'full',
+    },
+    {
+      id: 'pay-370',
+      kind: 'payment',
+      customerName: CUSTOMER_NAME,
+      merchant: MERCHANT_NAME,
+      timestamp: '2026-08-08T10:00:00.000Z',
+      source: 'customer',
+      transactionIds: ['EK-2026-000370'],
+      amount: 280,
+      paymentKind: 'full',
+    },
+    {
+      id: 'pay-350',
+      kind: 'payment',
+      customerName: 'Aman Verma',
+      merchant: MERCHANT_NAME,
+      timestamp: '2026-08-20T11:00:00.000Z',
+      source: 'customer',
+      transactionIds: ['EK-2026-000350'],
+      amount: 180,
+      paymentKind: 'full',
+    },
+  ],
   notices: [],
   shopkeeperRecent: [
     {

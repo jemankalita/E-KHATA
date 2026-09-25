@@ -31,9 +31,10 @@ export function applyPendingQr(prev: KhataState, pending: PendingQr): KhataState
     status: 'verified',
     timestamp: new Date().toISOString(),
     verification: verified(),
-    settled: false,
-    payBy: pending.payBy || payByFromPreset('7d'),
-  }
+        settled: false,
+        payBy: pending.payBy || payByFromPreset('7d'),
+        amountPaid: 0,
+      }
 
   const isHomeMerchant = pending.merchant === prev.merchant.name
 

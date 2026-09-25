@@ -1,3 +1,7 @@
+import type { LedgerEvent, SettlementSource } from '../lib/creditScore/types'
+
+export type { LedgerEvent, SettlementSource }
+
 export type Role = 'customer' | 'shopkeeper'
 
 export type TransactionSource = 'QR' | 'RFID'
@@ -31,6 +35,10 @@ export interface Transaction {
   verification: TransactionVerification
   settled: boolean
   payBy: string
+  amountPaid?: number
+  settledAt?: string
+  settlementSource?: SettlementSource
+  disputed?: boolean
 }
 
 export interface Customer {
@@ -94,5 +102,6 @@ export interface KhataState {
   pendingQr: PendingQr | null
   shopkeeperRecent: ShopkeeperRecent[]
   notices: SettlementNotice[]
+  ledgerEvents: LedgerEvent[]
   nextSequence: number
 }

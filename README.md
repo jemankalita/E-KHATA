@@ -53,7 +53,15 @@ Open the [live demo](https://ekhata-gamma.vercel.app/) and use **Continue as sho
 
 ## Roadmap
 
-### Next milestone — collections operations
+### Phase 1 — khata credit score (this build)
+
+Shop–customer repayment behaviour becomes an explainable score (300–900) plus feature breakdown. Query `GET /api/credit-score?customer=Rahul%20Sharma&merchant=Sharma%20Stores`. Three customer settlements are required; due-date auto-settles are excluded. This is alternative data only — E-KHATA does not lend, set a limit, or charge interest.
+
+### Phase 2 / 3 — licensed lending (not built)
+
+A revolving khata line or merchant working-capital product would need an NBFC (or bank) as the lender, with E-KHATA as an LSP. Do not add credit-limit or interest logic in this repo until that partnership exists.
+
+### Collections operations
 
 - **Aging buckets** — 0–30 / 31–60 / 61–90 / 90+ days on outstanding khata
 - **Reminders** — scheduled nudges before and after the due date
@@ -111,6 +119,7 @@ The Vite API reads `ELEVENLABS_API_KEY` on the server and never exposes the key 
 | `/login` | Role select + reset demo |
 | `/terms` | Terms |
 | `/shopkeeper` | Shop dashboard |
+| `/shopkeeper/credit` | Per-customer khata score + bill correction |
 | `/shopkeeper/upload` | Photograph bill (OCR) |
 | `/shopkeeper/create` | Review / create items |
 | `/shopkeeper/qr` | QR + **Add to account** |

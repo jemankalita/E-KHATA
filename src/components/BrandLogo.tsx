@@ -26,7 +26,7 @@ export function BrandWordmark({
           e-Khata
         </span>
         {showTagline ? (
-          <span className="mt-1 hidden text-[11px] text-muted-foreground lg:block">Trust captured in a snap.</span>
+          <span className="mt-1 hidden text-[11px] text-muted-foreground lg:block">Khata as a credit file.</span>
         ) : null}
       </span>
     </Link>
@@ -37,7 +37,7 @@ export function BrandLockup({ className }: { className?: string }) {
   return (
     <img
       src="/logo.png"
-      alt="e-Khata — Trust captured in a snap."
+      alt="e-Khata — Khata as a credit file."
       className={cn('brand-logo object-contain object-left', className)}
     />
   )

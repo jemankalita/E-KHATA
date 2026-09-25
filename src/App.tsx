@@ -8,6 +8,7 @@ import { CustomerSettlementPage } from '@/pages/CustomerSettlementPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PayPage } from '@/pages/PayPage'
 import { ShopkeeperCreatePage } from '@/pages/ShopkeeperCreatePage'
+import { ShopkeeperCreditPage } from '@/pages/ShopkeeperCreditPage'
 import { ShopkeeperDashboardPage } from '@/pages/ShopkeeperDashboardPage'
 import { ShopkeeperQrPage } from '@/pages/ShopkeeperQrPage'
 import { ShopkeeperUploadPage } from '@/pages/ShopkeeperUploadPage'
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/customer/ledger" element={<CustomerLedgerPage />} />
           <Route path="/customer/settlement" element={<CustomerSettlementPage />} />
         <Route path="/shopkeeper" element={<ShopkeeperDashboardPage />} />
+        <Route path="/shopkeeper/credit" element={<ShopkeeperCreditPage />} />
         <Route path="/shopkeeper/upload" element={<ShopkeeperUploadPage />} />
         <Route path="/shopkeeper/create" element={<ShopkeeperCreatePage />} />
         <Route path="/shopkeeper/qr" element={<ShopkeeperQrPage />} />
